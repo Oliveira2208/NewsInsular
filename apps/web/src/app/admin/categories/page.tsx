@@ -14,14 +14,13 @@ export default function AdminCategories() {
   const [name, setName] = useState('')
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      const supabase = createClient()
+      const { data } = await supabase.from('categories').select('*').order('name')
+      setCategories(data ?? [])
+      setLoading(false)
+    }
     fetchCategories()
-  }, [])
-
-  const fetchCategories = useCallback(async () => {
-    const supabase = createClient()
-    const { data } = await supabase.from('categories').select('*').order('name')
-    setCategories(data ?? [])
-    setLoading(false)
   }, [])
 
   const handleCreate = async (e: React.FormEvent) => {

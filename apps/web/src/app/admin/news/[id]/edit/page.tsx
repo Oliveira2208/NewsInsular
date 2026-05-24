@@ -172,6 +172,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
                     src={img.url}
                     alt=""
                     className="w-full h-32 object-cover rounded-lg"
+                    loading="lazy"
                   />
                   <button
                     type="button"
