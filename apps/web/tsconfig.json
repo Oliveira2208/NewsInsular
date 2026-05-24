@@ -15,11 +15,9 @@
     "incremental": true,
     "plugins": [{ "name": "next" }],
     "paths": {
-      '@/*': ['./src/*'],
-      '@newsinsular/types': ['../../packages/types/src'],
-      '@newsinsular/utils': ['../../packages/utils/src']
+      "@/*": ["./src/*"]
     }
   },
-  "include": ['next-env.d.ts', '**/*.ts', '**/*.tsx', '.next/types/**/*.ts'],
-  "exclude": ['node_modules']
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
 }
