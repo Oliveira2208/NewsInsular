@@ -93,10 +93,14 @@ export function NotificationsDropdown() {
                             month: 'short',
                           })}
                         </span>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-gray-400">
-                          {n.recipients_count} destinatarios
-                        </span>
+                        {n.recipients_count > 0 && (
+                          <>
+                            <span className="text-xs text-gray-400">•</span>
+                            <span className="text-xs text-gray-400">
+                              {n.recipients_count} destinatario{n.recipients_count > 1 ? 's' : ''}
+                            </span>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
