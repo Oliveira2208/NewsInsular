@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
 import { SupabaseContext } from '@/lib/supabase/provider'
+import { AuthProvider } from '@/lib/auth/auth-context'
 
 export function Providers({ children }: { children: ReactNode }) {
   const [client] = useState(() => createBrowserClient(
@@ -12,7 +13,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <SupabaseContext.Provider value={client}>
-      {children}
+      <AuthProvider>
+        {children}
+      </AuthProvider>
     </SupabaseContext.Provider>
   )
 }

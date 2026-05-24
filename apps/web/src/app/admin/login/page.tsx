@@ -20,18 +20,20 @@ export default function AdminLogin() {
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
-      setError('Invalid credentials')
+      setError('Credenciales inválidas')
       setLoading(false)
       return
     }
 
     router.push('/admin')
+    router.refresh()
   }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Login</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Panel de Administración</h1>
+        <p className="text-gray-500 mb-6">Ingresa tus credenciales para continuar</p>
 
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4">{error}</div>
@@ -50,7 +52,7 @@ export default function AdminLogin() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <input
               type="password"
               value={password}
@@ -65,7 +67,7 @@ export default function AdminLogin() {
             disabled={loading}
             className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
           </button>
         </div>
       </form>

@@ -1,23 +1,17 @@
-import { createClient } from '@/lib/supabase/server'
 import AdminSidebar from '@/components/admin-sidebar'
-import { redirect } from 'next/navigation'
+import { AuthGuard } from '@/lib/auth/auth-guard'
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/admin/login')
-  }
-
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <AdminSidebar />
-      <main className="flex-1 p-8">{children}</main>
-    </div>
+    <AuthGuard>
+      <div className="flex min-h-screen bg-gray-100">
+        <AdminSidebar />
+        <main className="flex-1 p-8">{children}</main>
+      </div>
+    </AuthGuard>
   )
 }

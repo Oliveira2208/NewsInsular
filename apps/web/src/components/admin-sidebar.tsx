@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { LayoutDashboard, FileText, Folder, Users, LogOut } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth/auth-context'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -15,13 +14,7 @@ const navItems = [
 
 export default function AdminSidebar() {
   const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClient()
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/admin/login')
-  }
+  const { signOut } = useAuth()
 
   return (
     <aside className="w-64 bg-gray-900 text-white flex flex-col">
@@ -54,11 +47,11 @@ export default function AdminSidebar() {
 
       <div className="p-4 border-t border-gray-800">
         <button
-          onClick={handleLogout}
+          onClick={signOut}
           className="flex items-center gap-3 px-4 py-3 w-full text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors"
         >
           <LogOut className="w-5 h-5" />
-          Logout
+          Cerrar sesión
         </button>
       </div>
     </aside>
