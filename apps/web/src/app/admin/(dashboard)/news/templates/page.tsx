@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import type { Category } from '@/lib/types'
 import MarkdownEditor from '@/components/markdown-editor'
 
 interface NewsTemplate {
@@ -11,10 +10,9 @@ interface NewsTemplate {
   name: string
   summary_template: string | null
   content_template: string | null
-  default_category_id: string | null
   is_active: boolean
   created_at: string
-  category?: Category
+  categories?: { id: string, name: string }[]
 }
 
 interface CategoryOption {
@@ -32,7 +30,7 @@ export default function NewsTemplates() {
     name: '',
     summary_template: '',
     content_template: '',
-    default_category_id: '',
+    category_ids: [] as string[],
     is_active: true,
   })
 
@@ -40,7 +38,7 @@ export default function NewsTemplates() {
     const supabase = createClient()
     const { data } = await supabase
       .from('news_templates')
-      .select('*, category:categories(name)')
+      .select('*, news_templates_categories:categories(id, name)')
       .order('name')
     setTemplates(data ?? [])
     setLoading(false)
@@ -59,14 +57,27 @@ export default function NewsTemplates() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     const supabase = createClient()
-    await supabase.from('news_templates').insert({
-      name: form.name,
-      summary_template: form.summary_template || null,
-      content_template: form.content_template || null,
-      default_category_id: form.default_category_id || null,
-      is_active: form.is_active,
-    })
-    setForm({ name: '', summary_template: '', content_template: '', default_category_id: '', is_active: true })
+    const { data: newTemplate } = await supabase
+      .from('news_templates')
+      .insert({
+        name: form.name,
+        summary_template: form.summary_template || null,
+        content_template: form.content_template || null,
+        is_active: form.is_active,
+      })
+      .select()
+      .single()
+    
+    if (newTemplate && form.category_ids.length > 0) {
+      const categoryLinks = form.category_ids.map((catId, idx) => ({
+        template_id: newTemplate.id,
+        category_id: catId,
+        position: idx
+      }))
+      await supabase.from('news_templates_categories').insert(categoryLinks)
+    }
+    
+    setForm({ name: '', summary_template: '', content_template: '', category_ids: [], is_active: true })
     setShowForm(false)
     fetchTemplates()
   }
@@ -79,10 +90,21 @@ export default function NewsTemplates() {
       name: form.name,
       summary_template: form.summary_template || null,
       content_template: form.content_template || null,
-      default_category_id: form.default_category_id || null,
       is_active: form.is_active,
     }).eq('id', editingId)
-    setForm({ name: '', summary_template: '', content_template: '', default_category_id: '', is_active: true })
+    
+    await supabase.from('news_templates_categories').delete().eq('template_id', editingId)
+    
+    if (form.category_ids.length > 0) {
+      const categoryLinks = form.category_ids.map((catId, idx) => ({
+        template_id: editingId,
+        category_id: catId,
+        position: idx
+      }))
+      await supabase.from('news_templates_categories').insert(categoryLinks)
+    }
+    
+    setForm({ name: '', summary_template: '', content_template: '', category_ids: [], is_active: true })
     setEditingId(null)
     setShowForm(false)
     fetchTemplates()
@@ -91,16 +113,18 @@ export default function NewsTemplates() {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Eliminar esta plantilla?')) return
     const supabase = createClient()
+    await supabase.from('news_templates_categories').delete().eq('template_id', id)
     await supabase.from('news_templates').delete().eq('id', id)
     fetchTemplates()
   }
 
   const handleEdit = (template: NewsTemplate) => {
+    const catIds = template.categories?.map(c => c.id) || []
     setForm({
       name: template.name,
       summary_template: template.summary_template || '',
       content_template: template.content_template || '',
-      default_category_id: template.default_category_id || '',
+      category_ids: catIds,
       is_active: template.is_active,
     })
     setEditingId(template.id)
@@ -108,9 +132,18 @@ export default function NewsTemplates() {
   }
 
   const cancelEdit = () => {
-    setForm({ name: '', summary_template: '', content_template: '', default_category_id: '', is_active: true })
+    setForm({ name: '', summary_template: '', content_template: '', category_ids: [], is_active: true })
     setEditingId(null)
     setShowForm(false)
+  }
+
+  const toggleCategory = (catId: string) => {
+    setForm(p => ({
+      ...p,
+      category_ids: p.category_ids.includes(catId)
+        ? p.category_ids.filter(id => id !== catId)
+        : [...p.category_ids, catId]
+    }))
   }
 
   if (loading) return <div>Cargando...</div>
@@ -120,7 +153,7 @@ export default function NewsTemplates() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Plantillas de Noticias</h1>
         <button
-          onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: '', summary_template: '', content_template: '', default_category_id: '', is_active: true }) }}
+          onClick={() => { setShowForm(!showForm); setEditingId(null); setForm({ name: '', summary_template: '', content_template: '', category_ids: [], is_active: true }) }}
           className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark w-full sm:w-auto justify-center"
         >
           <Plus className="w-4 h-4" />
@@ -146,17 +179,23 @@ export default function NewsTemplates() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Categoría por defecto</label>
-              <select
-                value={form.default_category_id}
-                onChange={(e) => setForm(p => ({ ...p, default_category_id: e.target.value }))}
-                className="w-full px-4 py-2 border rounded-lg"
-              >
-                <option value="">Sin categoría</option>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Categorías</label>
+              <div className="flex flex-wrap gap-2 p-3 border rounded-lg min-h-[50px]">
                 {categories.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => toggleCategory(c.id)}
+                    className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                      form.category_ids.includes(c.id)
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {c.name}
+                  </button>
                 ))}
-              </select>
+              </div>
             </div>
           </div>
 
@@ -206,7 +245,7 @@ export default function NewsTemplates() {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoría</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categorías</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
             </tr>
@@ -215,7 +254,7 @@ export default function NewsTemplates() {
             {templates.map((t) => (
               <tr key={t.id}>
                 <td className="px-6 py-4 font-medium text-gray-900">{t.name}</td>
-                <td className="px-6 py-4 text-gray-500">{t.category?.name || '-'}</td>
+                <td className="px-6 py-4 text-gray-500">{t.categories?.map(c => c.name).join(', ') || '-'}</td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 text-xs rounded-full ${t.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
                     {t.is_active ? 'Activa' : 'Inactiva'}
@@ -241,7 +280,7 @@ export default function NewsTemplates() {
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900">{t.name}</p>
-                <p className="text-sm text-gray-500">{t.category?.name || 'Sin categoría'}</p>
+                <p className="text-sm text-gray-500">{t.categories?.map(c => c.name).join(', ') || 'Sin categorías'}</p>
               </div>
               <div className="flex gap-1">
                 <button onClick={() => handleEdit(t)} className="p-2 text-gray-500 hover:text-primary">

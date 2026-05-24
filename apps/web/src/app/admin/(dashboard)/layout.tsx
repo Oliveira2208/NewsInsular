@@ -10,10 +10,10 @@ export default function AdminDashboardLayout({
     <div className="flex min-h-screen bg-gray-100">
       <AdminSidebar />
       <AdminNavbar />
-      <div className="flex-1 flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen overflow-x-hidden">
         <div className="md:hidden h-14" />
         <main className="flex-1 p-4 md:p-6 lg:p-8 md:ml-64">
-          <div className="max-w-6xl mx-auto">
+          <div className="max-w-6xl mx-auto overflow-x-auto">
             {children}
           </div>
         </main>

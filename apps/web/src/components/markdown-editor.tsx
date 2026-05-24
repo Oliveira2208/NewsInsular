@@ -76,6 +76,8 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
         heading: {
           levels: [1, 2, 3],
         },
+        link: false,
+        underline: false,
       }),
       Underline,
       Highlight.configure({
