@@ -1,0 +1,25 @@
+{
+  "name": "newsinsular",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Multiplatform news application with Next.js, Expo and Supabase",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile dev",
+    "build:web": "pnpm --filter web build",
+    "lint": "pnpm --filter web lint",
+    "typecheck": "pnpm -r --parallel --filter='./packages/*' exec npm run typecheck"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*",
+    "supabase/*"
+  ],
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=18",
+    "pnpm": ">=8"
+  }
+}

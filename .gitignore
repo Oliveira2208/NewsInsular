@@ -1,0 +1,70 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.pnpm/
+.yarn/
+.yarn-cache/
+
+# Build outputs
+.next/
+.out/
+.turbo/
+dist/
+build/
+
+# Expo builds
+apps/mobile/android/
+apps/mobile/ios/
+apps/mobile/node_modules/
+
+# Environment files - NEVER commit these
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+*.env
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+*.tsbuildinfo
+
+# Vercel
+.vercel/
+.vercel/
+
+# TypeScript
+tsconfig.tsbuildinfo
+
+# NativeWind
+apps/mobile/tailwind.config.lock
+
+# EAS builds
+apps/mobile/.eas/
+apps/mobile/build/
+apps/mobile/dist/

@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "NewsInsular",
+    "slug": "newsinsular",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a56db"
+    },
+    "scheme": "newsinsular",
+    "platforms": ["ios", "android"],
+    "sdkVersion": "50.0.0",
+    "extra": {
+      "eas": {
+        "projectId": "newsinsular-app"
+      }
+    },
+    "android": {
+      "package": "com.newsinsular.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#1a56db"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.newsinsular.app",
+      "buildNumber": "1",
+      "supportsTablet": true
+    }
+  }
+}

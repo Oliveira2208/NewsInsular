@@ -1,0 +1,2 @@
+export { formatDate, formatDateShort, timeAgo, generateSlug, validateIdentityDoc, formatIdentityDoc, VENEZUELA_STATES } from '@newsinsular/utils'
+export type { Category, News, NewsImage, Person, Notification, RegisterFormData } from '@newsinsular/types'

@@ -1,0 +1,31 @@
+{
+  "name": "@newsinsular/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios"
+  },
+  "dependencies": {
+    "@newsinsular/types": "workspace:*",
+    "@newsinsular/utils": "workspace:*",
+    "@supabase/supabase-js": "^2.45.0",
+    "date-fns": "^3.6.0",
+    "expo": "~50.0.0",
+    "expo-router": "~3.5.0",
+    "expo-secure-store": "~12.0.0",
+    "expo-sharing": "~11.0.0",
+    "expo-status-bar": "~1.0.0",
+    "nativewind": "^4.0.0",
+    "react": "18.2.0",
+    "react-native": "0.74.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~18.2.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.0.0"
+  }
+}

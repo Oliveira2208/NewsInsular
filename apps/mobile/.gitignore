@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+build/
+
+# Environment - nunca subir secrets
+.env
+
+# IDE
+.vscode/
+.idea/
