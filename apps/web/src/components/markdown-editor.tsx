@@ -171,6 +171,24 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
     setShowColor(false)
   }
 
+  const getIsActive = (type: string, attrs?: Record<string, unknown>): boolean => {
+    if (!editor) return false
+    try {
+      return editor.isActive(type, attrs)
+    } catch {
+      return false
+    }
+  }
+
+  const getIsActiveAlign = (align: string): boolean => {
+    if (!editor) return false
+    try {
+      return editor.isActive({ textAlign: align as 'left' | 'center' | 'right' | 'justify' })
+    } catch {
+      return false
+    }
+  }
+
   const ToolbarButton = ({
     onClick,
     active,
@@ -197,6 +215,15 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
     </button>
   )
 
+  const getTextColor = () => {
+    if (!editor) return '#000'
+    try {
+      return editor.getAttributes('textStyle')?.color || '#000'
+    } catch {
+      return '#000'
+    }
+  }
+
   const Dropdown = ({
     isOpen,
     onClose,
@@ -221,22 +248,22 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
   return (
     <div className={`border rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''}`}>
       <div className="flex flex-wrap gap-1 p-2 bg-gray-50 border-b items-center overflow-x-auto">
-        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Negrita (Ctrl+B)">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={getIsActive('bold')} title="Negrita (Ctrl+B)">
           <Bold className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Cursiva (Ctrl+I)">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={getIsActive('italic')} title="Cursiva (Ctrl+I)">
           <Italic className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')} title="Subrayado (Ctrl+U)">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={getIsActive('underline')} title="Subrayado (Ctrl+U)">
           <UnderlineIcon className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="Tachado">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={getIsActive('strike')} title="Tachado">
           <Strikethrough className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title="Código">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} active={getIsActive('code')} title="Código">
           <Code className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive('highlight')} title="Resaltar">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={getIsActive('highlight')} title="Resaltar">
           <Highlighter className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title="Limpiar formato">
@@ -252,7 +279,7 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
             className="p-2 rounded hover:bg-gray-200 text-gray-600"
             title="Color de texto"
           >
-            <span className="block w-4 h-4 rounded border" style={{ backgroundColor: editor.getAttributes('textStyle').color || '#000' }} />
+            <span className="block w-4 h-4 rounded border" style={{ backgroundColor: getTextColor() }} />
           </button>
           <Dropdown isOpen={showColor} onClose={() => setShowColor(false)}>
             <div className="grid grid-cols-5 gap-1">
@@ -271,46 +298,46 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
 
         <span className="w-px h-6 bg-gray-300 mx-1" />
 
-        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="Título 1">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={getIsActive('heading', { level: 1 })} title="Título 1">
           <Heading1 className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="Título 2">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={getIsActive('heading', { level: 2 })} title="Título 2">
           <Heading2 className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="Título 3">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={getIsActive('heading', { level: 3 })} title="Título 3">
           <Heading3 className="w-4 h-4" />
         </ToolbarButton>
 
         <span className="w-px h-6 bg-gray-300 mx-1" />
 
-        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title="Lista">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={getIsActive('bulletList')} title="Lista">
           <List className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} title="Lista numerada">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={getIsActive('orderedList')} title="Lista numerada">
           <ListOrdered className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} active={editor.isActive('taskList')} title="Lista de tareas">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} active={getIsActive('taskList')} title="Lista de tareas">
           <ListChecks className="w-4 h-4" />
         </ToolbarButton>
 
         <span className="w-px h-6 bg-gray-300 mx-1" />
 
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('left').run()} active={editor.isActive({ textAlign: 'left' })} title="Alinear izquierda">
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('left').run()} active={getIsActiveAlign('left')} title="Alinear izquierda">
           <AlignLeft className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('center').run()} active={editor.isActive({ textAlign: 'center' })} title="Alinear centro">
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('center').run()} active={getIsActiveAlign('center')} title="Alinear centro">
           <AlignCenter className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('right').run()} active={editor.isActive({ textAlign: 'right' })} title="Alinear derecha">
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('right').run()} active={getIsActiveAlign('right')} title="Alinear derecha">
           <AlignRight className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={editor.isActive({ textAlign: 'justify' })} title="Justificar">
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={getIsActiveAlign('justify')} title="Justificar">
           <AlignJustify className="w-4 h-4" />
         </ToolbarButton>
 
         
 
-        <ToolbarButton onClick={setLink} active={editor.isActive('link')} title="Insertar enlace">
+        <ToolbarButton onClick={setLink} active={getIsActive('link')} title="Insertar enlace">
           <LinkIcon className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton onClick={addImage} title="Insertar imagen">
@@ -319,7 +346,7 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
         <ToolbarButton onClick={addTable} title="Insertar tabla">
           <TableIcon className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Cita">
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={getIsActive('blockquote')} title="Cita">
           <Quote className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} title="Línea horizontal">
