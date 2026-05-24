@@ -224,6 +224,24 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
     }
   }
 
+  const canUndo = () => {
+    if (!editor) return false
+    try {
+      return editor.can().undo()
+    } catch {
+      return false
+    }
+  }
+
+  const canRedo = () => {
+    if (!editor) return false
+    try {
+      return editor.can().redo()
+    } catch {
+      return false
+    }
+  }
+
   const Dropdown = ({
     isOpen,
     onClose,
@@ -355,10 +373,10 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
 
         <span className="w-px h-6 bg-gray-300 mx-1" />
 
-        <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Deshacer (Ctrl+Z)">
+        <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!canUndo()} title="Deshacer (Ctrl+Z)">
           <Undo className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Rehacer (Ctrl+Y)">
+        <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!canRedo()} title="Rehacer (Ctrl+Y)">
           <Redo className="w-4 h-4" />
         </ToolbarButton>
 
