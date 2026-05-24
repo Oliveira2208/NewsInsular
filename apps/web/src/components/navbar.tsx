@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, Bell, User } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import { NotificationsDropdown } from './notifications-dropdown'
 
 export function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -19,20 +20,16 @@ export function Navbar() {
             <Link href="/" className="text-gray-600 hover:text-primary">
               Inicio
             </Link>
+            <Link href="/about" className="text-gray-600 hover:text-primary">
+              Nosotros
+            </Link>
+            <Link href="/contact" className="text-gray-600 hover:text-primary">
+              Contacto
+            </Link>
             <Link href="/register" className="text-gray-600 hover:text-primary">
               Registrarse
             </Link>
-            <button className="relative p-2 text-gray-600 hover:text-primary">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            </button>
-            <Link
-              href="/admin"
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
-            >
-              <User className="w-4 h-4" />
-              Admin
-            </Link>
+            <NotificationsDropdown />
           </div>
 
           <button
@@ -53,18 +50,25 @@ export function Navbar() {
               Inicio
             </Link>
             <Link
+              href="/about"
+              className="block px-4 py-2 text-gray-600 hover:bg-gray-50"
+              onClick={() => setMobileOpen(false)}
+            >
+              Nosotros
+            </Link>
+            <Link
+              href="/contact"
+              className="block px-4 py-2 text-gray-600 hover:bg-gray-50"
+              onClick={() => setMobileOpen(false)}
+            >
+              Contacto
+            </Link>
+            <Link
               href="/register"
               className="block px-4 py-2 text-gray-600 hover:bg-gray-50"
               onClick={() => setMobileOpen(false)}
             >
               Registrarse
-            </Link>
-            <Link
-              href="/admin"
-              className="block px-4 py-2 text-primary font-medium"
-              onClick={() => setMobileOpen(false)}
-            >
-              Panel Admin
             </Link>
           </div>
         )}

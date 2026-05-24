@@ -81,6 +81,23 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     setDeletingImages((prev) => prev.filter((imgId) => imgId !== imageId))
   }, [])
 
+  const deleteNews = useCallback(async () => {
+    if (!confirm('¿Eliminar esta noticia? Esta acción no se puede deshacer.')) return
+    const supabase = createClient()
+
+    if (news?.images) {
+      const paths = news.images
+        .map((img) => img.url.match(/\/news-images\/(.+)$/)?.[1])
+        .filter(Boolean)
+      if (paths.length > 0) {
+        await supabase.storage.from('news-images').remove(paths as string[])
+      }
+    }
+
+    await supabase.from('news').delete().eq('id', id)
+    router.push('/admin/news')
+  }, [id, news, router])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -222,6 +239,13 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
           >
             {loading ? 'Guardando...' : 'Guardar cambios'}
+          </button>
+          <button
+            type="button"
+            onClick={deleteNews}
+            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+          >
+            Eliminar noticia
           </button>
           <button
             type="button"
