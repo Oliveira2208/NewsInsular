@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
-  const isLoginRoute = pathname === '/admin/login'
+  const isLoginRoute = pathname === '/login-admin'
   const isAdminRoute = pathname.startsWith('/admin')
 
   if (!isAdminRoute || isLoginRoute) {
@@ -33,7 +33,7 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) {
-    return NextResponse.redirect(new URL('/admin/login', request.url))
+    return NextResponse.redirect(new URL('/login-admin', request.url))
   }
 
   return response
