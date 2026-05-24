@@ -168,6 +168,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             <div className="grid grid-cols-3 gap-4">
               {existingImages.map((img) => (
                 <div key={img.id} className="relative group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={img.url}
                     alt=""

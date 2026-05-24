@@ -101,11 +101,7 @@ export default function NewsDetail({ news }: NewsDetailProps) {
         <p className="text-xl text-gray-600 mb-6 font-medium">{news.summary}</p>
       )}
 
-      {/* eslint-disable-next-line react/no-danger */}
-      <div
-        className="prose prose-lg max-w-none"
-        dangerouslySetInnerHTML={{ __html: news.content }}
-      />
+      <div className="prose prose-lg max-w-none" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: news.content }} />
     </article>
   )
 }
