@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
@@ -10,9 +10,15 @@ import { TableRow } from '@tiptap/extension-table-row'
 import { TableHeader } from '@tiptap/extension-table-header'
 import { TableCell } from '@tiptap/extension-table-cell'
 import Placeholder from '@tiptap/extension-placeholder'
+import TextAlign from '@tiptap/extension-text-align'
+import Underline from '@tiptap/extension-underline'
+import Highlight from '@tiptap/extension-highlight'
+import { Color } from '@tiptap/extension-color'
+import { TextStyle } from '@tiptap/extension-text-style'
 import {
   Bold,
   Italic,
+  Underline as UnderlineIcon,
   Strikethrough,
   Heading1,
   Heading2,
@@ -27,10 +33,18 @@ import {
   Code,
   Undo,
   Redo,
+  Minus,
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Minus,
+  AlignJustify,
+  Highlighter,
+  RemoveFormatting,
+  Eye,
+  Code2,
+  Maximize,
+  Minimize,
+  ChevronDown,
 } from 'lucide-react'
 
 interface MarkdownEditorProps {
@@ -39,7 +53,23 @@ interface MarkdownEditorProps {
   height?: number | string
 }
 
-export default function MarkdownEditor({ value, onChange, height = 300 }: MarkdownEditorProps) {
+
+
+const TEXT_COLORS = [
+  '#000000', '#FFFFFF', '#FF0000', '#00FF00', '#0000FF',
+  '#FFFF00', '#FF00FF', '#00FFFF', '#FFA500', '#800080',
+  '#008000', '#800000', '#000080', '#808000', '#FFC0CB',
+  '#A52A2A', '#D2691E', '#696969', '#2F4F4F', '#4B0082',
+]
+
+
+
+export default function MarkdownEditor({ value, onChange, height = 400 }: MarkdownEditorProps) {
+  const [showHtml, setShowHtml] = useState(false)
+  const [htmlValue, setHtmlValue] = useState('')
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showColor, setShowColor] = useState(false)
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -47,10 +77,16 @@ export default function MarkdownEditor({ value, onChange, height = 300 }: Markdo
           levels: [1, 2, 3],
         },
       }),
+      Underline,
+      Highlight.configure({
+        multicolor: true,
+      }),
+      Color,
+      TextStyle,
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-primary underline cursor-pointer',
+          class: 'text-blue-600 underline cursor-pointer',
         },
       }),
       Image.configure({
@@ -67,6 +103,9 @@ export default function MarkdownEditor({ value, onChange, height = 300 }: Markdo
       TableRow,
       TableHeader,
       TableCell,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
       Placeholder.configure({
         placeholder: 'Escribe el contenido aquí...',
       }),
@@ -108,7 +147,29 @@ export default function MarkdownEditor({ value, onChange, height = 300 }: Markdo
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
   }, [editor])
 
-  if (!editor) return null
+  const toggleHtmlView = useCallback(() => {
+    if (!editor) return
+    if (showHtml) {
+      editor.commands.setContent(htmlValue)
+      onChange(htmlValue)
+      setShowHtml(false)
+    } else {
+      setHtmlValue(editor.getHTML())
+      setShowHtml(true)
+    }
+  }, [editor, showHtml, htmlValue, onChange])
+
+  const toggleFullscreen = useCallback(() => {
+    setIsFullscreen(!isFullscreen)
+  }, [isFullscreen])
+
+  const wordCount = editor?.storage.characterCount?.words?.() ?? editor?.getText().split(/\s+/).filter(Boolean).length ?? 0
+
+  const setTextColor = (color: string) => {
+    if (!editor) return
+    editor.chain().focus().setColor(color).run()
+    setShowColor(false)
+  }
 
   const ToolbarButton = ({
     onClick,
@@ -129,21 +190,45 @@ export default function MarkdownEditor({ value, onChange, height = 300 }: Markdo
       disabled={disabled}
       title={title}
       className={`p-2 rounded hover:bg-gray-200 ${
-        active ? 'bg-gray-200 text-primary' : 'text-gray-600'
+        active ? 'bg-gray-200 text-blue-600' : 'text-gray-600'
       } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       {children}
     </button>
   )
 
+  const Dropdown = ({
+    isOpen,
+    onClose,
+    children,
+  }: {
+    isOpen: boolean
+    onClose: () => void
+    children: React.ReactNode
+  }) => (
+    <div className="relative">
+      {isOpen && (
+        <div className="absolute z-50 top-full left-0 mt-1 bg-white border rounded-lg shadow-lg p-2 min-w-[120px]">
+          {children}
+        </div>
+      )}
+      {isOpen && (
+        <div className="fixed inset-0" onClick={onClose} />
+      )}
+    </div>
+  )
+
   return (
-    <div className="border rounded-lg overflow-hidden">
-      <div className="flex flex-wrap gap-1 p-2 bg-gray-50 border-b overflow-x-auto">
+    <div className={`border rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-0 z-50 bg-white' : ''}`}>
+      <div className="flex flex-wrap gap-1 p-2 bg-gray-50 border-b items-center overflow-x-auto">
         <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Negrita (Ctrl+B)">
           <Bold className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Cursiva (Ctrl+I)">
           <Italic className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive('underline')} title="Subrayado (Ctrl+U)">
+          <UnderlineIcon className="w-4 h-4" />
         </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="Tachado">
           <Strikethrough className="w-4 h-4" />
@@ -151,6 +236,38 @@ export default function MarkdownEditor({ value, onChange, height = 300 }: Markdo
         <ToolbarButton onClick={() => editor.chain().focus().toggleCode().run()} active={editor.isActive('code')} title="Código">
           <Code className="w-4 h-4" />
         </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleHighlight().run()} active={editor.isActive('highlight')} title="Resaltar">
+          <Highlighter className="w-4 h-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()} title="Limpiar formato">
+          <RemoveFormatting className="w-4 h-4" />
+        </ToolbarButton>
+
+        <span className="w-px h-6 bg-gray-300 mx-1" />
+
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowColor(!showColor)}
+            className="p-2 rounded hover:bg-gray-200 text-gray-600"
+            title="Color de texto"
+          >
+            <span className="block w-4 h-4 rounded border" style={{ backgroundColor: editor.getAttributes('textStyle').color || '#000' }} />
+          </button>
+          <Dropdown isOpen={showColor} onClose={() => setShowColor(false)}>
+            <div className="grid grid-cols-5 gap-1">
+              {TEXT_COLORS.map((color) => (
+                <button
+                  key={color}
+                  type="button"
+                  onClick={() => setTextColor(color)}
+                  className="w-6 h-6 rounded border border-gray-300 hover:scale-110 transition-transform"
+                  style={{ backgroundColor: color }}
+                />
+              ))}
+            </div>
+          </Dropdown>
+        </div>
 
         <span className="w-px h-6 bg-gray-300 mx-1" />
 
@@ -187,8 +304,11 @@ export default function MarkdownEditor({ value, onChange, height = 300 }: Markdo
         <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('right').run()} active={editor.isActive({ textAlign: 'right' })} title="Alinear derecha">
           <AlignRight className="w-4 h-4" />
         </ToolbarButton>
+        <ToolbarButton onClick={() => editor.chain().focus().setTextAlign('justify').run()} active={editor.isActive({ textAlign: 'justify' })} title="Justificar">
+          <AlignJustify className="w-4 h-4" />
+        </ToolbarButton>
 
-        <span className="w-px h-6 bg-gray-300 mx-1" />
+        
 
         <ToolbarButton onClick={setLink} active={editor.isActive('link')} title="Insertar enlace">
           <LinkIcon className="w-4 h-4" />
@@ -208,15 +328,50 @@ export default function MarkdownEditor({ value, onChange, height = 300 }: Markdo
 
         <span className="w-px h-6 bg-gray-300 mx-1" />
 
-        <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Deshacer">
+        <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Deshacer (Ctrl+Z)">
           <Undo className="w-4 h-4" />
         </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Rehacer">
+        <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Rehacer (Ctrl+Y)">
           <Redo className="w-4 h-4" />
+        </ToolbarButton>
+
+        <span className="w-px h-6 bg-gray-300 mx-1" />
+
+        <ToolbarButton onClick={toggleHtmlView} active={showHtml} title={showHtml ? "Ver editor" : "Ver HTML"}>
+          {showHtml ? <Eye className="w-4 h-4" /> : <Code2 className="w-4 h-4" />}
+        </ToolbarButton>
+        <ToolbarButton onClick={toggleFullscreen} title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}>
+          {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
         </ToolbarButton>
       </div>
 
-      <EditorContent editor={editor} />
+      {showHtml ? (
+        <textarea
+          value={htmlValue}
+          onChange={(e) => setHtmlValue(e.target.value)}
+          className="w-full p-4 font-mono text-sm focus:outline-none"
+          placeholder="Edita el HTML aquí..."
+          style={{ minHeight: typeof height === 'number' ? `${height}px` : height }}
+        />
+      ) : (
+        <EditorContent editor={editor} />
+      )}
+
+      {!showHtml && (
+        <div className="flex justify-between items-center px-3 py-1 bg-gray-50 border-t text-xs text-gray-500">
+          <span>{wordCount} palabras</span>
+          {isFullscreen && (
+            <button
+              type="button"
+              onClick={toggleFullscreen}
+              className="flex items-center gap-1 px-2 py-1 rounded hover:bg-gray-200"
+            >
+              <Minimize className="w-3 h-3" />
+              Salir de pantalla completa
+            </button>
+          )}
+        </div>
+      )}
     </div>
   )
 }
