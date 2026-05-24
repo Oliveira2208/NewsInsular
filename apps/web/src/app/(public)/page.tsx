@@ -82,7 +82,7 @@ export default async function HomePage({
       </Suspense>
 
       <Suspense fallback={<NewsSkeleton />}>
-        <NewsFeed initialNews={news} categorySlug={params.category} />
+        <NewsFeed key={params.category || 'all'} initialNews={news} categorySlug={params.category} />
       </Suspense>
     </div>
   )
