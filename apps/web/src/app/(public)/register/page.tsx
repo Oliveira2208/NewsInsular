@@ -27,7 +27,6 @@ type RegisterFormData = z.infer<typeof registerSchema>
 
 export default function RegisterPage() {
   const router = useRouter()
-  const supabase = createClient()
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof RegisterFormData, string>>>({})
   const [form, setForm] = useState<RegisterFormData>({
