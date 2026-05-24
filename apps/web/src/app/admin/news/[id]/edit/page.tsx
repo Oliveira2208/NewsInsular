@@ -113,17 +113,17 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     router.push('/admin/news')
   }
 
-  if (!news) return <div>Cargando...</div>
+  if (!news) return <div>Loading...</div>
 
   const existingImages = news.images?.sort((a, b) => a.position - b.position) ?? []
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Editar noticia</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">Edit Article</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
           <input
             type="text"
             value={form.title}
@@ -145,13 +145,13 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
           <select
             value={form.category_id}
             onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))}
             className="w-full px-4 py-2 border rounded-lg"
           >
-            <option value="">Sin categoría</option>
+            <option value="">No category</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -159,7 +159,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Resumen</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Summary</label>
           <textarea
             value={form.summary}
             onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
@@ -169,7 +169,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contenido</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
           <textarea
             value={form.content}
             onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
@@ -181,7 +181,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
         {existingImages.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Imágenes actuales</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Current Images</label>
             <div className="grid grid-cols-3 gap-4">
               {existingImages.map((img) => (
                 <div key={img.id} className="relative group">
@@ -202,7 +202,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
                   </button>
                   {deletingImages.includes(img.id) && (
                     <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-sm">Eliminando...</span>
+                      <span className="text-white text-sm">Removing...</span>
                     </div>
                   )}
                 </div>
@@ -212,7 +212,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Agregar nuevas imágenes</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Add New Images</label>
           <input
             type="file"
             multiple
@@ -229,7 +229,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             checked={form.published}
             onChange={(e) => setForm((p) => ({ ...p, published: e.target.checked }))}
           />
-          <label htmlFor="published" className="text-sm text-gray-700">Publicada</label>
+          <label htmlFor="published" className="text-sm text-gray-700">Published</label>
         </div>
 
         <div className="flex gap-4">
@@ -238,21 +238,21 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             disabled={loading}
             className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
           >
-            {loading ? 'Guardando...' : 'Guardar cambios'}
+            {loading ? 'Saving...' : 'Save Changes'}
           </button>
           <button
             type="button"
             onClick={deleteNews}
             className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
           >
-            Eliminar noticia
+            Delete Article
           </button>
           <button
             type="button"
             onClick={() => router.back()}
             className="px-6 py-2 border rounded-lg hover:bg-gray-50"
           >
-            Cancelar
+            Cancel
           </button>
         </div>
       </form>

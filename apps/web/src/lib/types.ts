@@ -29,18 +29,19 @@ export interface NewsImage {
 }
 
 export interface Person {
-  id: string
-  full_name: string
+  id: number
   identity_doc: string
-  birth_date: string
-  phone: string
+  first_name: string
+  last_name: string
+  phone: string | null
   email: string
-  state: string
-  municipality: string
-  parish: string
-  commune: string
-  address: string
-  push_token: string | null
+  birth_date: string | null
+  state_id: number | null
+  municipality_id: number | null
+  parish_id: number | null
+  commune_id: number | null
+  notifications_email: boolean
+  fcm_token: string | null
   created_at: string
 }
 

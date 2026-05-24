@@ -70,18 +70,29 @@ export default function CreateNews() {
     }
 
     if (form.published) {
-      const firstImage = images.length > 0 ? null : (news as any).images?.[0]?.url
+      const category = categories.find(c => c.id === form.category_id)
       try {
-        await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/notify-new-news`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            newsId: news.id,
-            title: news.title,
-            summary: news.summary,
-            imageUrl: firstImage,
+        await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-news-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: news.title,
+              summary: news.summary,
+              slug: news.slug,
+              category_name: category?.name,
+            }),
           }),
-        })
+          fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push-notification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              title: news.title,
+              body: news.summary,
+              slug: news.slug,
+            }),
+          }),
+        ])
       } catch (err) {
         console.error('Failed to send notifications:', err)
       }
@@ -93,11 +104,11 @@ export default function CreateNews() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-8">Nueva noticia</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">New Article</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Título</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
           <input
             type="text"
             value={form.title}
@@ -119,13 +130,13 @@ export default function CreateNews() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
           <select
             value={form.category_id}
             onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))}
             className="w-full px-4 py-2 border rounded-lg"
           >
-            <option value="">Sin categoría</option>
+            <option value="">No category</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -133,7 +144,7 @@ export default function CreateNews() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Resumen</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Summary</label>
           <textarea
             value={form.summary}
             onChange={(e) => setForm((p) => ({ ...p, summary: e.target.value }))}
@@ -143,7 +154,7 @@ export default function CreateNews() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Contenido</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
           <textarea
             value={form.content}
             onChange={(e) => setForm((p) => ({ ...p, content: e.target.value }))}
@@ -154,7 +165,7 @@ export default function CreateNews() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Imágenes</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Images</label>
           <input
             type="file"
             multiple
@@ -171,7 +182,7 @@ export default function CreateNews() {
             checked={form.published}
             onChange={(e) => setForm((p) => ({ ...p, published: e.target.checked }))}
           />
-          <label htmlFor="published" className="text-sm text-gray-700">Publicar inmediatamente</label>
+          <label htmlFor="published" className="text-sm text-gray-700">Publish immediately</label>
         </div>
 
         <div className="flex gap-4">
@@ -180,14 +191,14 @@ export default function CreateNews() {
             disabled={loading}
             className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
           >
-            {loading ? 'Guardando...' : 'Guardar'}
+            {loading ? 'Saving...' : 'Save'}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
             className="px-6 py-2 border rounded-lg hover:bg-gray-50"
           >
-            Cancelar
+            Cancel
           </button>
         </div>
       </form>

@@ -45,7 +45,7 @@ export default function AdminCategories() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar esta categoría?')) return
+    if (!confirm('Delete this category?')) return
     const supabase = createClient()
     await supabase.from('categories').delete().eq('id', id)
     fetchCategories()
@@ -63,18 +63,18 @@ export default function AdminCategories() {
     setShowForm(false)
   }
 
-  if (loading) return <div>Cargando...</div>
+  if (loading) return <div>Loading...</div>
 
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Categorías</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Categories</h1>
         <button
           onClick={() => { setShowForm(!showForm); setEditingId(null); setName('') }}
           className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg"
         >
           <Plus className="w-4 h-4" />
-          Nueva categoría
+          New Category
         </button>
       </div>
 
@@ -87,15 +87,15 @@ export default function AdminCategories() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Nombre de la categoría"
+            placeholder="Category name"
             className="flex-1 px-4 py-2 border rounded-lg"
             required
           />
           <button type="submit" className="px-6 py-2 bg-primary text-white rounded-lg">
-            {editingId ? 'Actualizar' : 'Crear'}
+            {editingId ? 'Update' : 'Create'}
           </button>
           <button type="button" onClick={cancelEdit} className="px-4 py-2 border rounded-lg">
-            Cancelar
+            Cancel
           </button>
         </form>
       )}
@@ -104,9 +104,9 @@ export default function AdminCategories() {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">

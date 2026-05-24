@@ -19,12 +19,12 @@ export default async function AdminDashboard() {
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Dashboard</h1>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <StatCard label="Noticias publicadas" value={newsCount ?? 0} />
-        <StatCard label="Personas registradas" value={peopleCount ?? 0} />
+        <StatCard label="Published Articles" value={newsCount ?? 0} />
+        <StatCard label="Registered People" value={peopleCount ?? 0} />
       </div>
 
       <div className="bg-white rounded-xl shadow-sm p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Últimas noticias</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent News</h2>
         {recentNews && recentNews.length > 0 ? (
           <div className="space-y-3">
             {recentNews.map((n) => (
@@ -34,13 +34,13 @@ export default async function AdminDashboard() {
                   <p className="text-sm text-gray-500">{n.category?.name}</p>
                 </div>
                 <span className="text-xs text-gray-400">
-                  {new Date(n.created_at).toLocaleDateString('es')}
+                  {new Date(n.created_at).toLocaleDateString()}
                 </span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-gray-500">No hay noticias publicadas</p>
+          <p className="text-gray-500">No published news</p>
         )}
       </div>
     </div>

@@ -32,12 +32,15 @@ export function Navbar() {
             <NotificationsDropdown />
           </div>
 
-          <button
-            className="md:hidden p-2"
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            {mobileOpen ? <X /> : <Menu />}
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <NotificationsDropdown />
+            <button
+              className="p-2"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              {mobileOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
 
         {mobileOpen && (

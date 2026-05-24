@@ -7,9 +7,9 @@ import { useSupabase } from '@/lib/supabase/provider'
 interface Notification {
   id: string
   title: string
-  message: string | null
-  created_at: string
+  body: string | null
   read: boolean
+  created_at: string
 }
 
 export function NotificationsDropdown() {
@@ -21,6 +21,7 @@ export function NotificationsDropdown() {
 
   useEffect(() => {
     async function fetchNotifications() {
+      setLoading(true)
       const { data } = await supabase
         .from('notifications')
         .select('*')
@@ -30,6 +31,7 @@ export function NotificationsDropdown() {
       if (data) {
         setNotifications(data)
       }
+      setLoading(false)
     }
 
     if (open) {
@@ -64,15 +66,15 @@ export function NotificationsDropdown() {
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border z-50">
           <div className="p-4 border-b">
-            <h3 className="font-semibold text-gray-900">Notificaciones</h3>
+            <h3 className="font-semibold text-gray-900">Notifications</h3>
           </div>
           
           {loading ? (
-            <div className="p-4 text-center text-gray-500">Cargando...</div>
+            <div className="p-4 text-center text-gray-500">Loading...</div>
           ) : notifications.length === 0 ? (
             <div className="p-4 text-center text-gray-500 flex flex-col items-center gap-2">
               <BellOff className="w-8 h-8 text-gray-300" />
-              <p>No hay notificaciones</p>
+              <p>No notifications</p>
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto">
@@ -82,11 +84,11 @@ export function NotificationsDropdown() {
                   className={`p-4 border-b last:border-0 ${!n.read ? 'bg-blue-50' : ''}`}
                 >
                   <p className="font-medium text-gray-900 text-sm">{n.title}</p>
-                  {n.message && (
-                    <p className="text-xs text-gray-600 mt-1">{n.message}</p>
+                  {n.body && (
+                    <p className="text-xs text-gray-600 mt-1">{n.body}</p>
                   )}
                   <p className="text-xs text-gray-400 mt-2">
-                    {new Date(n.created_at).toLocaleDateString('es-ES', {
+                    {new Date(n.created_at).toLocaleDateString(undefined, {
                       day: 'numeric',
                       month: 'short',
                       hour: '2-digit',

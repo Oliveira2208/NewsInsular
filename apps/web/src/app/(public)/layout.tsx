@@ -11,7 +11,7 @@ export default function HomeLayout({
       <main className="flex-1">{children}</main>
       <footer className="bg-gray-800 text-white py-8 mt-auto">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-gray-400">© 2026 NewsInsular. Todos los derechos reservados.</p>
+          <p className="text-gray-400">© 2026 NewsInsular. All rights reserved.</p>
         </div>
       </footer>
     </div>

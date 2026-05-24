@@ -20,7 +20,7 @@ export default function AdminLogin() {
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
-      setError('Credenciales inválidas')
+      setError('Invalid credentials')
       setLoading(false)
       return
     }
@@ -50,7 +50,7 @@ export default function AdminLogin() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
             <input
               type="password"
               value={password}
@@ -65,7 +65,7 @@ export default function AdminLogin() {
             disabled={loading}
             className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
           >
-            {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+            {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </div>
       </form>

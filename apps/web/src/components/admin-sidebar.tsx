@@ -8,9 +8,9 @@ import { useRouter } from 'next/navigation'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/news', label: 'Noticias', icon: FileText },
-  { href: '/admin/categories', label: 'Categorías', icon: Folder },
-  { href: '/admin/people', label: 'Personas', icon: Users },
+  { href: '/admin/news', label: 'News', icon: FileText },
+  { href: '/admin/categories', label: 'Categories', icon: Folder },
+  { href: '/admin/people', label: 'People', icon: Users },
 ]
 
 export default function AdminSidebar() {
@@ -58,7 +58,7 @@ export default function AdminSidebar() {
           className="flex items-center gap-3 px-4 py-3 w-full text-gray-400 hover:bg-gray-800 hover:text-white rounded-lg transition-colors"
         >
           <LogOut className="w-5 h-5" />
-          Cerrar sesión
+          Logout
         </button>
       </div>
     </aside>

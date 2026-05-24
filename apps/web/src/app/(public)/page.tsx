@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import NewsFeed from '@/components/news-feed'
 import CategoryFilter from '@/components/category-filter'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 
 async function getCategories() {
-  const supabase = createClient()
+  const supabase = await createClient()
   const { data } = await supabase
     .from('categories')
     .select('*')
@@ -14,7 +16,7 @@ async function getCategories() {
 }
 
 async function getNews(categorySlug?: string) {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const [categoryResult, newsResult] = await Promise.all([
     categorySlug

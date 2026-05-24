@@ -2,25 +2,19 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { formatIdentityDoc, VENEZUELA_STATES } from '@/lib/utils'
+import { formatIdentityDoc } from '@/lib/utils'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
-
-const identitySchema = z.string().regex(/^\d{6,9}$/)
+import { requestNotificationPermission } from '@/lib/firebase'
 
 const registerSchema = z.object({
-  full_name: z.string().min(2, 'Nombre requerido'),
+  full_name: z.string().min(2, 'Name required'),
   identity_prefix: z.enum(['V', 'E', 'P']),
-  identity_number: z.string().regex(/^\d{6,9}$/, 'Documento inválido (6-9 dígitos)'),
-  birth_date: z.string().min(1, 'Fecha requerida'),
-  phone: z.string().min(10, 'Teléfono inválido'),
-  email: z.string().email('Email inválido'),
-  state: z.string().min(1, 'Estado requerido'),
-  municipality: z.string().min(1, 'Municipio requerido'),
-  parish: z.string().min(1, 'Parroquia requerida'),
-  commune: z.string().min(1, 'Comuna requerida'),
-  address: z.string().min(5, 'Dirección requerida'),
+  identity_number: z.string().regex(/^\d{6,9}$/, 'Invalid document (6-9 digits)'),
+  birth_date: z.string().min(1, 'Birth date required'),
+  phone: z.string().min(10, 'Invalid phone'),
+  email: z.string().email('Invalid email'),
+  notifications_email: z.boolean(),
 })
 
 type RegisterFormData = z.infer<typeof registerSchema>
@@ -36,11 +30,7 @@ export default function RegisterPage() {
     birth_date: '',
     phone: '',
     email: '',
-    state: '',
-    municipality: '',
-    parish: '',
-    commune: '',
-    address: '',
+    notifications_email: true,
   })
 
   const validate = () => {
@@ -66,38 +56,42 @@ export default function RegisterPage() {
     const supabase = createClient()
     const identity_doc = formatIdentityDoc(form.identity_prefix, form.identity_number)
 
-    const { error } = await supabase.from('people').insert({
-      full_name: form.full_name,
-      identity_doc,
-      birth_date: form.birth_date,
-      phone: form.phone,
-      email: form.email,
-      state: form.state,
-      municipality: form.municipality,
-      parish: form.parish,
-      commune: form.commune,
-      address: form.address,
-    })
-
-    setLoading(false)
+    const { data, error } = await supabase
+      .from('people')
+      .insert({
+        identity_doc,
+        first_name: form.full_name.split(' ')[0] || form.full_name,
+        last_name: form.full_name.split(' ').slice(1).join(' ') || form.full_name,
+        phone: form.phone,
+        email: form.email,
+        notifications_email: form.notifications_email,
+      })
+      .select()
+      .single()
 
     if (error) {
       if (error.message.includes('unique')) {
-        setErrors({ email: 'Este email ya está registrado' })
+        setErrors({ email: 'This email is already registered' })
       }
+      setLoading(false)
       return
     }
 
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-welcome-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: form.email, fullName: form.full_name }),
-      })
-    } catch (err) {
-      console.error('Failed to send welcome email:', err)
+    if (data && 'Notification' in window && Notification.permission === 'granted') {
+      try {
+        const fcmToken = await requestNotificationPermission()
+        if (fcmToken) {
+          await supabase
+            .from('people')
+            .update({ fcm_token: fcmToken })
+            .eq('id', data.id)
+        }
+      } catch (err) {
+        console.error('FCM token error:', err)
+      }
     }
 
+    setLoading(false)
     router.push('/register/success')
   }
 
@@ -108,27 +102,27 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Registro</h1>
-      <p className="text-gray-600 mb-8">Completa el formulario para registrarte</p>
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Register</h1>
+      <p className="text-gray-600 mb-8">Fill out the form to register</p>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nombre y apellidos
+            Full name
           </label>
           <input
             type="text"
             value={form.full_name}
             onChange={(e) => handleChange('full_name', e.target.value)}
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            placeholder="María García"
+            placeholder="John Doe"
           />
           {errors.full_name && <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Documento de identidad
+            Identity document
           </label>
           <div className="flex gap-2">
             <select
@@ -153,7 +147,7 @@ export default function RegisterPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Fecha de nacimiento
+            Birth date
           </label>
           <input
             type="date"
@@ -165,7 +159,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
           <input
             type="tel"
             value={form.phone}
@@ -183,70 +177,22 @@ export default function RegisterPage() {
             value={form.email}
             onChange={(e) => handleChange('email', e.target.value)}
             className="w-full px-4 py-2 border rounded-lg"
-            placeholder="correo@ejemplo.com"
+            placeholder="email@example.com"
           />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-            <select
-              value={form.state}
-              onChange={(e) => handleChange('state', e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg"
-            >
-              <option value="">Seleccionar...</option>
-              {VENEZUELA_STATES.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-            {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Municipio</label>
-            <input
-              type="text"
-              value={form.municipality}
-              onChange={(e) => handleChange('municipality', e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg"
-            />
-            {errors.municipality && <p className="text-red-500 text-sm mt-1">{errors.municipality}</p>}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Parroquia</label>
-            <input
-              type="text"
-              value={form.parish}
-              onChange={(e) => handleChange('parish', e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg"
-            />
-            {errors.parish && <p className="text-red-500 text-sm mt-1">{errors.parish}</p>}
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Comuna</label>
-            <input
-              type="text"
-              value={form.commune}
-              onChange={(e) => handleChange('commune', e.target.value)}
-              className="w-full px-4 py-2 border rounded-lg"
-            />
-            {errors.commune && <p className="text-red-500 text-sm mt-1">{errors.commune}</p>}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Dirección exacta</label>
-          <textarea
-            value={form.address}
-            onChange={(e) => handleChange('address', e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-            rows={3}
+        <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+          <input
+            type="checkbox"
+            id="notifications_email"
+            checked={form.notifications_email}
+            onChange={(e) => setForm((p) => ({ ...p, notifications_email: e.target.checked }))}
+            className="mt-1 w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
           />
-          {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
+          <label htmlFor="notifications_email" className="text-sm text-gray-700">
+            I want to receive notifications of new articles by email
+          </label>
         </div>
 
         <button
@@ -254,7 +200,7 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
         >
-          {loading ? 'Registrando...' : 'Registrarse'}
+          {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
     </div>
