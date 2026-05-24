@@ -26,16 +26,30 @@ async function getCategories() {
   }
 }
 
-async function getNews() {
+async function getNews(categorySlug?: string) {
   const supabase = await createClient()
   
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('news')
       .select('*, category:categories(*), images:news_images(*)')
       .eq('published', true)
       .order('created_at', { ascending: false })
       .limit(20)
+
+    if (categorySlug) {
+      const { data: catData } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', categorySlug)
+        .single()
+      
+      if (catData) {
+        query = query.eq('category_id', catData.id)
+      }
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error('News error:', error.message, error.details)
@@ -57,15 +71,11 @@ export default async function HomePage({
   const params = await searchParams
 
   const categories = await getCategories()
-  const news = await getNews()
+  const news = await getNews(params.category)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Noticias</h1>
-      
-      <div className="mb-4 p-4 bg-yellow-100 rounded text-sm font-mono">
-        Debug: {categories.length} categorías, {news.length} noticias
-      </div>
 
       <Suspense fallback={<div className="h-12 bg-gray-200 rounded-lg animate-pulse" />}>
         <CategoryFilter categories={categories} activeSlug={params.category} />
