@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, Folder, Users, Bell, LogOut, LayoutTemplate, FileTextIcon } from 'lucide-react'
+import { LayoutDashboard, FileText, Folder, Users, Bell, LogOut, LayoutTemplate } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 
 const navItems = [
@@ -12,7 +12,6 @@ const navItems = [
   { href: '/admin/categories', label: 'Categorías', icon: Folder },
   { href: '/admin/people', label: 'Personas', icon: Users },
   { href: '/admin/notifications', label: 'Notificaciones', icon: Bell },
-  { href: '/admin/notifications/templates', label: 'Plantillas Notif.', icon: FileTextIcon },
 ]
 
 export default function AdminSidebar() {

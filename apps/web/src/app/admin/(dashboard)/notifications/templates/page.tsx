@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
+import MarkdownEditor from '@/components/markdown-editor'
 
 interface NotificationTemplate {
   id: string
@@ -157,12 +158,10 @@ export default function NotificationTemplates() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Plantilla de Mensaje</label>
-            <textarea
+            <MarkdownEditor
               value={form.body_template}
-              onChange={(e) => setForm(p => ({ ...p, body_template: e.target.value }))}
-              placeholder="Se ha publicado: {title}"
-              className="w-full px-4 py-2 border rounded-lg"
-              rows={3}
+              onChange={(value) => setForm(p => ({ ...p, body_template: value }))}
+              height={150}
             />
           </div>
 

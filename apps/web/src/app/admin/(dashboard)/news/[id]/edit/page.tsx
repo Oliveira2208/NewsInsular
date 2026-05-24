@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useCallback, use } from 'react'
 import { useRouter } from 'next/navigation'
-import dynamic from 'next/dynamic'
 import { createClient } from '@/lib/supabase/client'
 import type { News, Category } from '@/lib/types'
-
-const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false })
+import MarkdownEditor from '@/components/markdown-editor'
 
 type PublishMode = 'draft' | 'now' | 'scheduled'
 
@@ -209,28 +207,62 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Categorías</label>
-          <div className="bg-gray-50 rounded-lg p-4 max-h-48 overflow-y-auto space-y-2">
-            {categories.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.category_ids.includes(c.id)}
-                  onChange={(e) => {
-                    const checked = e.target.checked
-                    setForm((p) => ({
+          <div className="mb-2 flex flex-wrap gap-2">
+            {form.category_ids.map((catId) => {
+              const cat = categories.find(c => c.id === catId)
+              return cat ? (
+                <span
+                  key={catId}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary rounded-full text-sm"
+                >
+                  {cat.name}
+                  <button
+                    type="button"
+                    onClick={() => setForm((p) => ({
                       ...p,
-                      category_ids: checked
-                        ? [...p.category_ids, c.id]
-                        : p.category_ids.filter(id => id !== c.id),
-                    }))
-                  }}
-                  className="rounded border-gray-300 text-primary"
-                />
-                <span className="text-sm text-gray-700">{c.name}</span>
-              </label>
-            ))}
+                      category_ids: p.category_ids.filter(id => id !== catId),
+                    }))}
+                    className="hover:text-primary-dark"
+                  >
+                    ×
+                  </button>
+                </span>
+              ) : null
+            })}
           </div>
-          <p className="text-xs text-gray-500 mt-1">Selecciona una o más categorías</p>
+          <input
+            type="text"
+            placeholder="Buscar categorías..."
+            className="w-full px-4 py-2 border rounded-lg mb-2"
+            onChange={(e) => {
+              const search = e.target.value.toLowerCase()
+              const filtered = categories.filter(c =>
+                c.name.toLowerCase().includes(search) &&
+                !form.category_ids.includes(c.id)
+              )
+            }}
+          />
+          <div className="bg-gray-50 rounded-lg p-2 max-h-40 overflow-y-auto">
+            {categories.filter(c => !form.category_ids.includes(c.id)).length === 0 ? (
+              <p className="text-sm text-gray-500 p-2">Todas las categorías seleccionadas</p>
+            ) : (
+              categories
+                .filter(c => !form.category_ids.includes(c.id))
+                .map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setForm((p) => ({
+                      ...p,
+                      category_ids: [...p.category_ids, c.id],
+                    }))}
+                    className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                  >
+                    {c.name}
+                  </button>
+                ))
+            )}
+          </div>
         </div>
 
         <div>
@@ -245,11 +277,10 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
         <div data-color-mode="light">
           <label className="block text-sm font-medium text-gray-700 mb-1">Contenido</label>
-          <MDEditor
+          <MarkdownEditor
             value={form.content}
-            onChange={(value) => setForm((p) => ({ ...p, content: value || '' }))}
+            onChange={(value) => setForm((p) => ({ ...p, content: value }))}
             height={300}
-            preview="edit"
           />
         </div>
 

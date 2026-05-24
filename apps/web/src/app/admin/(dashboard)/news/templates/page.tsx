@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Category } from '@/lib/types'
+import MarkdownEditor from '@/components/markdown-editor'
 
 interface NewsTemplate {
   id: string
@@ -160,24 +161,22 @@ export default function NewsTemplates() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Plantilla de Resumen</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Resumen por defecto</label>
             <input
               type="text"
               value={form.summary_template}
               onChange={(e) => setForm(p => ({ ...p, summary_template: e.target.value }))}
-              placeholder="{summary}"
+              placeholder="Resumen predeterminado para la noticia..."
               className="w-full px-4 py-2 border rounded-lg"
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Plantilla de Contenido (Markdown)</label>
-            <textarea
+          <div data-color-mode="light">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Contenido</label>
+            <MarkdownEditor
               value={form.content_template}
-              onChange={(e) => setForm(p => ({ ...p, content_template: e.target.value }))}
-              placeholder="# Título&#10;&#10;Contenido..."
-              className="w-full px-4 py-2 border rounded-lg font-mono text-sm"
-              rows={8}
+              onChange={(value) => setForm(p => ({ ...p, content_template: value }))}
+              height={300}
             />
           </div>
 
@@ -189,15 +188,6 @@ export default function NewsTemplates() {
               onChange={(e) => setForm(p => ({ ...p, is_active: e.target.checked }))}
             />
             <label htmlFor="is_active" className="text-sm text-gray-700">Activa</label>
-          </div>
-
-          <div className="bg-blue-50 rounded-lg p-4 text-sm">
-            <p className="font-medium text-blue-900 mb-2">Variables disponibles:</p>
-            <div className="flex flex-wrap gap-2">
-              <code className="bg-blue-100 px-2 py-1 rounded text-xs">{'{title}'}</code>
-              <code className="bg-blue-100 px-2 py-1 rounded text-xs">{'{summary}'}</code>
-              <code className="bg-blue-100 px-2 py-1 rounded text-xs">{'{date}'}</code>
-            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
