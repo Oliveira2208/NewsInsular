@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Search, Download, Copy } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import type { Person } from '@newsinsular/types'
+import type { Person } from '@/lib/types'
 
 export default function AdminPeople() {
   const [people, setPeople] = useState<Person[]>([])

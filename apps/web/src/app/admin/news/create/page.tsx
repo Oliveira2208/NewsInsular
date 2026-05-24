@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { generateSlug } from '@newsinsular/utils'
+import { generateSlug } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import type { Category } from '@newsinsular/types'
+import type { Category } from '@/lib/types'
 
 export default function CreateNews() {
   const router = useRouter()

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { formatIdentityDoc, VENEZUELA_STATES } from '@newsinsular/utils'
+import { formatIdentityDoc, VENEZUELA_STATES } from '@/lib/utils'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/client'
 

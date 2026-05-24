@@ -3,8 +3,8 @@
 import { useState, useCallback } from 'react'
 import Image from 'next/image'
 import { ChevronLeft, ChevronRight, Share2 } from 'lucide-react'
-import { formatDate } from '@newsinsular/utils'
-import type { News } from '@newsinsular/types'
+import { formatDate } from '@/lib/utils'
+import type { News } from '@/lib/types'
 
 interface NewsDetailProps {
   news: News

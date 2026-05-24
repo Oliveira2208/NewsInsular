@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { View, Text, FlatList, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useSupabase } from '@/providers/supabase'
-import type { Notification } from '@newsinsular/types'
+import type { Notification } from '../src/types'
 
 export default function NotificationsScreen() {
   const supabase = useSupabase()

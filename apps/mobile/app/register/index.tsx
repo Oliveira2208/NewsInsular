@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useSupabase } from '@/providers/supabase'
-import { formatIdentityDoc, VENEZUELA_STATES } from '@newsinsular/utils'
+import { formatIdentityDoc, VENEZUELA_STATES } from '../src/utils'
 
 export default function RegisterScreen() {
   const router = useRouter()

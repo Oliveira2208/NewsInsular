@@ -3,8 +3,8 @@ import { View, Text, ScrollView, Image, TouchableOpacity, Share, Dimensions } fr
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { ChevronLeft, ChevronRight, Share as ShareIcon } from 'lucide-react-native'
 import { useSupabase } from '@/providers/supabase'
-import { formatDate } from '@newsinsular/utils'
-import type { News } from '@newsinsular/types'
+import { formatDate } from '../src/utils'
+import type { News } from '../src/types'
 
 const { width } = Dimensions.get('window')
 

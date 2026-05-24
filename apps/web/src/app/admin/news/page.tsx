@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import type { News } from '@newsinsular/types'
+import type { News } from '@/lib/types'
 
 export default function AdminNews() {
   const [news, setNews] = useState<News[]>([])

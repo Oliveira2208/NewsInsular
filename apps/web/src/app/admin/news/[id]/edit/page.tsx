@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { generateSlug } from '@newsinsular/utils'
+import { generateSlug } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
-import type { News, Category } from '@newsinsular/types'
+import type { News, Category } from '@/lib/types'
 
 export default function EditNews({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)

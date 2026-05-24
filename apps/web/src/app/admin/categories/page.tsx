@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Edit2, Trash2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { generateSlug } from '@newsinsular/utils'
-import type { Category } from '@newsinsular/types'
+import { generateSlug } from '@/lib/utils'
+import type { Category } from '@/lib/types'
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState<Category[]>([])
