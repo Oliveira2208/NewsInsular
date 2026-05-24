@@ -44,10 +44,14 @@ export default function AdminNews() {
     const supabase = createClient()
     supabase
       .from('news')
-      .select('*, category:categories(name), images:news_images(*)')
+      .select('*, categories:news_categories(categories(name)), images:news_images(*)')
       .order('created_at', { ascending: false })
       .then(({ data }) => {
-        setNews(data ?? [])
+        const newsWithCats = data?.map(n => ({
+          ...n,
+          categories: n.categories?.map((nc: { categories: { name: string } }) => nc.categories) ?? [],
+        }))
+        setNews(newsWithCats ?? [])
         setLoading(false)
       })
   }, [])
@@ -56,9 +60,13 @@ export default function AdminNews() {
     const supabase = createClient()
     const { data } = await supabase
       .from('news')
-      .select('*, category:categories(name), images:news_images(*)')
+      .select('*, categories:news_categories(categories(name)), images:news_images(*)')
       .order('created_at', { ascending: false })
-    setNews(data ?? [])
+    const newsWithCats = data?.map(n => ({
+      ...n,
+      categories: n.categories?.map((nc: { categories: { name: string } }) => nc.categories) ?? [],
+    }))
+    setNews(newsWithCats ?? [])
     setLoading(false)
   }, [])
 
@@ -80,7 +88,7 @@ export default function AdminNews() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Noticias</h1>
         <Link
-          href="/admin/news/create"
+          href="/admin/news/select"
           className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark w-full sm:w-auto justify-center"
         >
           <Plus className="w-4 h-4" />
@@ -105,7 +113,9 @@ export default function AdminNews() {
                 <td className="px-6 py-4">
                   <p className="font-medium text-gray-900">{n.title}</p>
                 </td>
-                <td className="px-6 py-4 text-gray-600">{n.category?.name}</td>
+                <td className="px-6 py-4 text-gray-600">
+                  {n.categories?.map(c => c.name).join(', ') || '-'}
+                </td>
                 <td className="px-6 py-4">
                   {getStatusBadge(n)}
                   {n.scheduled_for && (
@@ -143,7 +153,7 @@ export default function AdminNews() {
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 truncate">{n.title}</p>
-                <p className="text-sm text-gray-500 mt-1">{n.category?.name}</p>
+                <p className="text-sm text-gray-500 mt-1">{n.categories?.map(c => c.name).join(', ') || '-'}</p>
               </div>
               <div className="flex gap-2">
                 <Link

@@ -3,33 +3,51 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import type { News } from '@/lib/types'
 
 interface NewsOption {
   id: string
   title: string
 }
 
+interface NotificationTemplate {
+  id: string
+  name: string
+  title_template: string
+  body_template: string
+  notification_type: string
+}
+
 export default function SendNotification() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [news, setNews] = useState<NewsOption[]>([])
+  const [templates, setTemplates] = useState<NotificationTemplate[]>([])
   const [form, setForm] = useState({
     news_id: '',
     title: '',
     body: '',
     notification_type: 'email_push',
+    template_id: '',
   })
 
   useEffect(() => {
     const supabase = createClient()
-    supabase
-      .from('news')
-      .select('id, title')
-      .eq('published', true)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setNews(data as NewsOption[] ?? []))
+    Promise.all([
+      supabase
+        .from('news')
+        .select('id, title')
+        .eq('published', true)
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('notification_templates')
+        .select('*')
+        .eq('is_active', true)
+        .order('name'),
+    ]).then(([{ data: newsData }, { data: templatesData }]) => {
+      setNews(newsData as NewsOption[] ?? [])
+      setTemplates(templatesData ?? [])
+    })
   }, [])
 
   const handleNewsChange = (newsId: string) => {
@@ -39,6 +57,23 @@ export default function SendNotification() {
       news_id: newsId,
       title: selected?.title || '',
     }))
+  }
+
+  const handleTemplateChange = (templateId: string) => {
+    if (!templateId) {
+      setForm(prev => ({ ...prev, template_id: '', title: '', body: '', notification_type: 'email_push' }))
+      return
+    }
+    const template = templates.find(t => t.id === templateId)
+    if (template) {
+      setForm(prev => ({
+        ...prev,
+        template_id: templateId,
+        title: template.title_template,
+        body: template.body_template || '',
+        notification_type: template.notification_type,
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +89,6 @@ export default function SendNotification() {
 
     const recipientCount = recipients?.length || 0
 
-    // Log notification
     const { error } = await supabase.from('notification_history').insert({
       news_id: form.news_id || null,
       title: form.title,
@@ -90,6 +124,20 @@ export default function SendNotification() {
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-1">Opcional: vincula la notificación a una noticia existente</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Plantilla</label>
+          <select
+            value={form.template_id}
+            onChange={(e) => handleTemplateChange(e.target.value)}
+            className="w-full px-4 py-2 border rounded-lg"
+          >
+            <option value="">Personalizado</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
         </div>
 
         <div>

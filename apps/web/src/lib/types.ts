@@ -15,11 +15,10 @@ export interface News {
   published_at: string | null
   scheduled_for: string | null
   deleted_at: string | null
-  category_id: string | null
   created_at: string
   updated_at: string
   author_id: string | null
-  category?: Category
+  categories?: Category[]
   images?: NewsImage[]
 }
 
@@ -29,6 +28,12 @@ export interface NewsImage {
   url: string
   position: number
   created_at: string
+}
+
+export interface NewsCategory {
+  news_id: string
+  category_id: string
+  position: number
 }
 
 export interface Person {

@@ -23,7 +23,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     title: '',
     summary: '',
     content: '',
-    category_id: '',
+    category_ids: [] as string[],
     published: false,
   })
   const [images, setImages] = useState<File[]>([])
@@ -34,7 +34,8 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
     Promise.all([
       supabase.from('categories').select('*'),
       supabase.from('news').select('*, images:news_images(*)').eq('id', id).single(),
-    ]).then(([{ data: cats }, { data: n }]) => {
+      supabase.from('news_categories').select('category_id').eq('news_id', id),
+    ]).then(([{ data: cats }, { data: n }, { data: newsCats }]) => {
       setCategories(cats ?? [])
       setNews(n)
       if (n) {
@@ -42,7 +43,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
           title: n.title,
           summary: n.summary ?? '',
           content: n.content,
-          category_id: n.category_id ?? '',
+          category_ids: newsCats?.map((nc: { category_id: string }) => nc.category_id) ?? [],
           published: n.published,
         })
         if (n.scheduled_for) {
@@ -136,12 +137,25 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
     await supabase.from('news').update(updateData).eq('id', id)
 
+    await supabase.from('news_categories').delete().eq('news_id', id)
+    if (form.category_ids.length > 0) {
+      const categoryInserts = form.category_ids.map((catId, index) => ({
+        news_id: id,
+        category_id: catId,
+        position: index,
+      }))
+      await supabase.from('news_categories').insert(categoryInserts)
+    }
+
     if (images.length > 0) {
       await uploadImages(id, images, news?.images?.length ?? 0)
     }
 
     if (publishMode === 'now' && !news?.published) {
-      const category = categories.find(c => c.id === form.category_id)
+      const categoryNames = categories
+        .filter(c => form.category_ids.includes(c.id))
+        .map(c => c.name)
+        .join(', ')
       try {
         await Promise.all([
           fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-news-email`, {
@@ -151,7 +165,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
               title: form.title,
               summary: form.summary,
               news_id: id,
-              category_name: category?.name,
+              category_name: categoryNames,
             }),
           }),
           fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-push-notification`, {
@@ -194,17 +208,29 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
-          <select
-            value={form.category_id}
-            onChange={(e) => setForm((p) => ({ ...p, category_id: e.target.value }))}
-            className="w-full px-4 py-2 border rounded-lg"
-          >
-            <option value="">Sin categoría</option>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Categorías</label>
+          <div className="bg-gray-50 rounded-lg p-4 max-h-48 overflow-y-auto space-y-2">
             {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <label key={c.id} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.category_ids.includes(c.id)}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    setForm((p) => ({
+                      ...p,
+                      category_ids: checked
+                        ? [...p.category_ids, c.id]
+                        : p.category_ids.filter(id => id !== c.id),
+                    }))
+                  }}
+                  className="rounded border-gray-300 text-primary"
+                />
+                <span className="text-sm text-gray-700">{c.name}</span>
+              </label>
             ))}
-          </select>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Selecciona una o más categorías</p>
         </div>
 
         <div>
@@ -229,7 +255,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
 
         {existingImages.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Imágenes Actuales</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Imágenes de Portada Actuales</label>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               {existingImages.map((img) => (
                 <div key={img.id} className="relative group">
@@ -260,7 +286,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Agregar Nuevas Imágenes</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Agregar Nuevas Imágenes de Portada</label>
           <input
             type="file"
             multiple
@@ -268,6 +294,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
             onChange={(e) => setImages([...e.target.files!])}
             className="w-full"
           />
+          <p className="text-xs text-gray-500 mt-1">La primera imagen se usará como portada principal</p>
         </div>
 
         <div className="border-t pt-4">

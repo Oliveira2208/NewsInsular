@@ -28,11 +28,11 @@ async function getCategories() {
 
 async function getNews(categorySlug?: string) {
   const supabase = await createClient()
-  
+
   try {
     let query = supabase
       .from('news')
-      .select('*, category:categories(*), images:news_images(*)')
+      .select('*, categories:news_categories(categories(*)), images:news_images(*)')
       .eq('published', true)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -44,9 +44,18 @@ async function getNews(categorySlug?: string) {
         .select('id')
         .eq('slug', categorySlug)
         .single()
-      
+
       if (catData) {
-        query = query.eq('category_id', catData.id)
+        const { data: newsIds } = await supabase
+          .from('news_categories')
+          .select('news_id')
+          .eq('category_id', catData.id)
+
+        if (newsIds && newsIds.length > 0) {
+          query = query.in('id', newsIds.map((n: { news_id: string }) => n.news_id))
+        } else {
+          return []
+        }
       }
     }
 

@@ -34,7 +34,7 @@ export default function NewsFeed({ initialNews, categorySlug }: NewsFeedProps) {
     
     let query = supabase
       .from('news')
-      .select('*, category:categories(*), images:news_images(*)')
+      .select('*, categories:news_categories(categories(*)), images:news_images(*)')
       .eq('published', true)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
@@ -46,9 +46,20 @@ export default function NewsFeed({ initialNews, categorySlug }: NewsFeedProps) {
         .select('id')
         .eq('slug', CategorySlug)
         .single()
-      
+
       if (catData) {
-        query = query.eq('category_id', catData.id)
+        const { data: newsIds } = await supabase
+          .from('news_categories')
+          .select('news_id')
+          .eq('category_id', catData.id)
+
+        if (newsIds && newsIds.length > 0) {
+          query = query.in('id', newsIds.map((n: { news_id: string }) => n.news_id))
+        } else {
+          setHasMore(false)
+          setLoading(false)
+          return
+        }
       }
     }
 
@@ -209,10 +220,14 @@ function NewsCard({ news }: { news: News }) {
         </div>
 
         <div className="p-4">
-          {news.category && (
-            <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded mb-2">
-              {news.category.name}
-            </span>
+          {news.categories && news.categories.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {news.categories.map((cat, idx) => (
+                <span key={idx} className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                  {cat.name}
+                </span>
+              ))}
+            </div>
           )}
           <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
             {news.title}

@@ -12,6 +12,7 @@ interface NewsDetailProps {
 
 export default function NewsDetail({ news }: NewsDetailProps) {
   const images = news.images?.sort((a, b) => a.position - b.position) ?? []
+  const categories = news.categories ?? []
   const [currentImage, setCurrentImage] = useState(0)
 
   const prevImage = useCallback(() => {
@@ -37,10 +38,14 @@ export default function NewsDetail({ news }: NewsDetailProps) {
 
   return (
     <article className="max-w-4xl mx-auto px-4 py-8">
-      {news.category && (
-        <span className="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full mb-4">
-          {news.category.name}
-        </span>
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-4">
+          {categories.map((cat, index) => (
+            <span key={index} className="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
+              {cat.name}
+            </span>
+          ))}
+        </div>
       )}
 
       <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">

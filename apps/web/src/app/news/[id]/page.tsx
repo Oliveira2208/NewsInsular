@@ -13,15 +13,14 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
 
   const { data: news } = await supabase
     .from('news')
-    .select('*, category:categories(name), images:news_images(*)')
+    .select('*, categories:news_categories(categories(name)), images:news_images(*)')
     .eq('id', id)
     .eq('published', true)
     .is('deleted_at', null)
     .single()
 
-  if (!news) notFound()
-
-  const sortedImages = news.images?.sort((a: { position: number }, b: { position: number }) => a.position - b.position) ?? []
+  const sortedImages = news?.images?.sort((a: { position: number }, b: { position: number }) => a.position - b.position) ?? []
+  const newsCategories = news?.categories?.map((nc: { categories: { name: string } }) => nc.categories) ?? []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -61,11 +60,11 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
 
           <div className="p-5 md:p-8 lg:p-10">
             <div className="flex flex-wrap items-center gap-3 mb-4">
-              {news.category && (
-                <span className="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
-                  {news.category.name}
+              {newsCategories.length > 0 && newsCategories.map((cat: { name: string }, index: number) => (
+                <span key={index} className="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                  {cat.name}
                 </span>
-              )}
+              ))}
               <span className="text-gray-400 text-sm">
                 {formatDate(news.created_at)}
               </span>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Bell, Mail, Settings, Plus, FileText } from 'lucide-react'
+import { Bell, Mail, Settings, Plus, FileText, FileTextIcon } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface NotificationHistory {
@@ -64,6 +64,13 @@ export default function AdminNotifications() {
           >
             <Plus className="w-4 h-4" />
             Nueva notificación
+          </Link>
+          <Link
+            href="/admin/notifications/templates"
+            className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
+          >
+            <FileTextIcon className="w-4 h-4" />
+            Plantillas
           </Link>
           <Link
             href="/admin/notifications/settings"
