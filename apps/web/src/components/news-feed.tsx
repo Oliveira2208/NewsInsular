@@ -46,7 +46,7 @@ function NewsCard({ news }: { news: News }) {
   }, [])
 
   const handleShare = async () => {
-    const url = `${window.location.origin}/news/${news.slug}`
+    const url = `${window.location.origin}/news/${news.id}`
     if (navigator.share) {
       await navigator.share({ title: news.title, text: news.summary ?? '', url })
     } else {
@@ -55,7 +55,7 @@ function NewsCard({ news }: { news: News }) {
   }
 
   return (
-    <Link href={`/news/${news.slug}`}>
+    <Link href={`/news/${news.id}`}>
       <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <div className="relative aspect-video bg-gray-100">
           {images.length > 0 ? (

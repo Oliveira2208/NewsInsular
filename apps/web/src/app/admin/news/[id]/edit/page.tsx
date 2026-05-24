@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, use } from 'react'
 import { useRouter } from 'next/navigation'
-import { generateSlug } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import type { News, Category } from '@/lib/types'
 
@@ -14,7 +13,6 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
   const [news, setNews] = useState<News | null>(null)
   const [form, setForm] = useState({
     title: '',
-    slug: '',
     summary: '',
     content: '',
     category_id: '',
@@ -34,7 +32,6 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
       if (n) {
         setForm({
           title: n.title,
-          slug: n.slug,
           summary: n.summary ?? '',
           content: n.content,
           category_id: n.category_id ?? '',
@@ -127,18 +124,7 @@ export default function EditNews({ params }: { params: Promise<{ id: string }> }
           <input
             type="text"
             value={form.title}
-            onChange={(e) => setForm((p) => ({ ...p, title: e.target.value, slug: generateSlug(e.target.value) }))}
-            className="w-full px-4 py-2 border rounded-lg"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-          <input
-            type="text"
-            value={form.slug}
-            onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
+            onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
             className="w-full px-4 py-2 border rounded-lg"
             required
           />

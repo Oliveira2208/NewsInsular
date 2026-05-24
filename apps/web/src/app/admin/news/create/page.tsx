@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { generateSlug } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import type { Category } from '@/lib/types'
 
@@ -12,7 +11,6 @@ export default function CreateNews() {
   const [categories, setCategories] = useState<Category[]>([])
   const [form, setForm] = useState({
     title: '',
-    slug: '',
     summary: '',
     content: '',
     category_id: '',
@@ -26,7 +24,7 @@ export default function CreateNews() {
   }, [])
 
   const handleTitleChange = (title: string) => {
-    setForm((prev) => ({ ...prev, title, slug: generateSlug(title) }))
+    setForm((prev) => ({ ...prev, title }))
   }
 
   const uploadImages = useCallback(async (newsId: string, files: File[], existingCount: number) => {
@@ -79,7 +77,7 @@ export default function CreateNews() {
             body: JSON.stringify({
               title: news.title,
               summary: news.summary,
-              slug: news.slug,
+              news_id: news.id,
               category_name: category?.name,
             }),
           }),
@@ -89,7 +87,7 @@ export default function CreateNews() {
             body: JSON.stringify({
               title: news.title,
               body: news.summary,
-              slug: news.slug,
+              news_id: news.id,
             }),
           }),
         ])
@@ -113,17 +111,6 @@ export default function CreateNews() {
             type="text"
             value={form.title}
             onChange={(e) => handleTitleChange(e.target.value)}
-            className="w-full px-4 py-2 border rounded-lg"
-            required
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Slug</label>
-          <input
-            type="text"
-            value={form.slug}
-            onChange={(e) => setForm((p) => ({ ...p, slug: e.target.value }))}
             className="w-full px-4 py-2 border rounded-lg"
             required
           />
