@@ -2,14 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, FileText, Folder, Users, LogOut } from 'lucide-react'
+import { LayoutDashboard, FileText, Folder, Users, Bell, LogOut } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 
 const navItems = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/news', label: 'News', icon: FileText },
-  { href: '/admin/categories', label: 'Categories', icon: Folder },
-  { href: '/admin/people', label: 'People', icon: Users },
+  { href: '/admin/news', label: 'Noticias', icon: FileText },
+  { href: '/admin/categories', label: 'Categorías', icon: Folder },
+  { href: '/admin/people', label: 'Personas', icon: Users },
+  { href: '/admin/notifications', label: 'Notificaciones', icon: Bell },
 ]
 
 export default function AdminSidebar() {

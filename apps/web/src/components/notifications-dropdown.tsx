@@ -1,21 +1,22 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Bell, BellOff } from 'lucide-react'
+import { Bell, BellOff, History } from 'lucide-react'
 import { useSupabase } from '@/lib/supabase/provider'
 
-interface Notification {
+interface NotificationHistory {
   id: string
   title: string
   body: string | null
-  read: boolean
+  notification_type: string
+  recipients_count: number
   created_at: string
 }
 
 export function NotificationsDropdown() {
   const supabase = useSupabase()
   const [open, setOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [notifications, setNotifications] = useState<NotificationHistory[]>([])
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -23,10 +24,10 @@ export function NotificationsDropdown() {
     async function fetchNotifications() {
       setLoading(true)
       const { data } = await supabase
-        .from('notifications')
+        .from('notification_history')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(5)
+        .limit(10)
       
       if (data) {
         setNotifications(data)
@@ -49,8 +50,6 @@ export function NotificationsDropdown() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const unreadCount = notifications.filter(n => !n.read).length
-
   return (
     <div className="relative" ref={dropdownRef}>
       <button
@@ -58,9 +57,6 @@ export function NotificationsDropdown() {
         className="relative p-2 text-gray-600 hover:text-primary"
       >
         <Bell className="w-5 h-5" />
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-        )}
       </button>
 
       {open && (
@@ -81,20 +77,29 @@ export function NotificationsDropdown() {
               {notifications.map((n) => (
                 <div
                   key={n.id}
-                  className={`p-4 border-b last:border-0 ${!n.read ? 'bg-blue-50' : ''}`}
+                  className="p-4 border-b last:border-0"
                 >
-                  <p className="font-medium text-gray-900 text-sm">{n.title}</p>
-                  {n.body && (
-                    <p className="text-xs text-gray-600 mt-1">{n.body}</p>
-                  )}
-                  <p className="text-xs text-gray-400 mt-2">
-                    {new Date(n.created_at).toLocaleDateString(undefined, {
-                      day: 'numeric',
-                      month: 'short',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </p>
+                  <div className="flex items-start gap-3">
+                    <History className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900 text-sm">{n.title}</p>
+                      {n.body && (
+                        <p className="text-xs text-gray-600 mt-1 line-clamp-2">{n.body}</p>
+                      )}
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs text-gray-400">
+                          {new Date(n.created_at).toLocaleDateString('es-ES', {
+                            day: 'numeric',
+                            month: 'short',
+                          })}
+                        </span>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-gray-400">
+                          {n.recipients_count} destinatarios
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
