@@ -171,10 +171,12 @@ function NewsCard({ news }: { news: News }) {
     }
   }
 
+  const showReadMore = news.summary && news.summary.length > 150
+
   return (
     <Link href={`/news/${news.id}`}>
-      <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-        <div className="relative aspect-video bg-gray-100">
+      <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+        <div className="relative aspect-video bg-gray-100 flex-shrink-0">
           {images.length > 0 ? (
             <>
               <Image
@@ -219,7 +221,7 @@ function NewsCard({ news }: { news: News }) {
           )}
         </div>
 
-        <div className="p-4">
+        <div className="p-4 flex flex-col flex-grow">
           {news.categories && news.categories.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
               {news.categories.map((cat, idx) => (
@@ -233,11 +235,18 @@ function NewsCard({ news }: { news: News }) {
             {news.title}
           </h2>
           {news.summary && (
-            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-              {news.summary}
+            <p className="text-sm text-gray-600 mb-3 flex-grow">
+              {showReadMore ? (
+                <>
+                  {news.summary.slice(0, 150)}...
+                  <span className="text-primary font-medium ml-1">Leer más</span>
+                </>
+              ) : (
+                news.summary
+              )}
             </p>
           )}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-auto pt-3 border-t">
             <span className="text-xs text-gray-500">
               {formatDate(news.created_at)}
             </span>
