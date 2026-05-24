@@ -1,18 +1,106 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, Share2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Share2, Loader2 } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import type { News } from '@/lib/types'
 
 interface NewsFeedProps {
   initialNews: News[]
+  categorySlug?: string
 }
 
-export default function NewsFeed({ initialNews }: NewsFeedProps) {
-  if (initialNews.length === 0) {
+export default function NewsFeed({ initialNews, categorySlug }: NewsFeedProps) {
+  const [news, setNews] = useState<News[]>(initialNews)
+  const [loading, setLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const [page, setPage] = useState(0)
+  const observerRef = useRef<IntersectionObserver | null>(null)
+  const loadingRef = useRef<HTMLDivElement>(null)
+
+  const PAGE_SIZE = 10
+
+  const loadMore = useCallback(async () => {
+    if (loading || !hasMore) return
+    
+    setLoading(true)
+    const nextPage = page + 1
+    
+    const supabase = createClient()
+    
+    let query = supabase
+      .from('news')
+      .select('*, category:categories(*), images:news_images(*)')
+      .eq('published', true)
+      .order('created_at', { ascending: false })
+      .range(nextPage * PAGE_SIZE, (nextPage + 1) * PAGE_SIZE - 1)
+
+    if (categorySlug) {
+      const { data: catData } = await supabase
+        .from('categories')
+        .select('id')
+        .eq('slug', categorySlug)
+        .single()
+      
+      if (catData) {
+        query = query.eq('category_id', catData.id)
+      }
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('Load more error:', error)
+      setLoading(false)
+      return
+    }
+
+    if (data && data.length > 0) {
+      setNews(prev => [...prev, ...data])
+      setPage(nextPage)
+      if (data.length < PAGE_SIZE) {
+        setHasMore(false)
+      }
+    } else {
+      setHasMore(false)
+    }
+    
+    setLoading(false)
+  }, [loading, hasMore, page, categorySlug])
+
+  useEffect(() => {
+    setNews(initialNews)
+    setPage(0)
+    setHasMore(true)
+  }, [initialNews])
+
+  useEffect(() => {
+    if (!hasMore || loading) return
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          loadMore()
+        }
+      },
+      { threshold: 0.1 }
+    )
+
+    if (loadingRef.current) {
+      observerRef.current.observe(loadingRef.current)
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+      }
+    }
+  }, [hasMore, loading, loadMore])
+
+  if (news.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
         No hay noticias disponibles
@@ -21,11 +109,25 @@ export default function NewsFeed({ initialNews }: NewsFeedProps) {
   }
 
   return (
-    <div className="grid gap-8 mt-8 md:grid-cols-2">
-      {initialNews.map((item) => (
-        <NewsCard key={item.id} news={item} />
-      ))}
-    </div>
+    <>
+      <div className="grid gap-8 mt-8 md:grid-cols-2">
+        {news.map((item) => (
+          <NewsCard key={item.id} news={item} />
+        ))}
+      </div>
+      
+      <div ref={loadingRef} className="py-8 flex justify-center">
+        {loading && (
+          <div className="flex items-center gap-2 text-gray-500">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>Cargando más noticias...</span>
+          </div>
+        )}
+        {!loading && !hasMore && news.length > 0 && (
+          <p className="text-gray-400 text-sm">No hay más noticias</p>
+        )}
+      </div>
+    </>
   )
 }
 
@@ -45,7 +147,9 @@ function NewsCard({ news }: { news: News }) {
     setCurrentImage(i)
   }, [])
 
-  const handleShare = async () => {
+  const handleShare = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     const url = `${window.location.origin}/news/${news.id}`
     if (navigator.share) {
       await navigator.share({ title: news.title, text: news.summary ?? '', url })
