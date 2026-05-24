@@ -3,7 +3,7 @@
 import { createContext, useContext } from 'react'
 import { SupabaseClient } from '@supabase/supabase-js'
 
-const SupabaseContext = createContext<SupabaseClient | null>(null)
+export const SupabaseContext = createContext<SupabaseClient | null>(null)
 
 export function useSupabase() {
   const client = useContext(SupabaseContext)
