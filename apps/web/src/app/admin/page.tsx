@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 export default async function AdminDashboard() {
   const supabase = await createClient()
 
-  const [{ data: newsCount }, { data: peopleCount }, { data: recentNews }] = await Promise.all([
+  const [{ count: newsCount }, { count: peopleCount }, { data: recentNews }] = await Promise.all([
     supabase.from('news').select('id', { count: 'exact' }).eq('published', true),
     supabase.from('people').select('id', { count: 'exact' }),
     supabase
