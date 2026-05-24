@@ -92,7 +92,7 @@ export default function NotificationSettings() {
           </div>
         ))}
 
-        <div className="border-t pt-6 flex gap-4">
+        <div className="border-t pt-6 flex flex-col sm:flex-row gap-4">
           <button
             onClick={handleSave}
             disabled={saving}
@@ -109,16 +109,22 @@ export default function NotificationSettings() {
         </div>
       </div>
 
-      <div className="mt-8 bg-blue-50 rounded-xl p-6">
+        <div className="mt-8 bg-blue-50 rounded-xl p-6">
         <h2 className="font-medium text-blue-900 mb-2">Variables disponibles</h2>
         <p className="text-sm text-blue-700 mb-3">Usa estas variables en las plantillas:</p>
-        <div className="grid grid-cols-2 gap-2 text-sm font-mono">
-          <code className="bg-blue-100 px-2 py-1 rounded">{'{title}'}</code>
-          <span className="text-blue-800">Título de la noticia</span>
-          <code className="bg-blue-100 px-2 py-1 rounded">{'{summary}'}</code>
-          <span className="text-blue-800">Resumen de la noticia</span>
-          <code className="bg-blue-100 px-2 py-1 rounded">{'{url}'}</code>
-          <span className="text-blue-800">URL de la noticia</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm font-mono">
+          <div className="flex items-center gap-2">
+            <code className="bg-blue-100 px-2 py-1 rounded">{'{title}'}</code>
+            <span className="text-blue-800 text-xs">Título de la noticia</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="bg-blue-100 px-2 py-1 rounded">{'{summary}'}</code>
+            <span className="text-blue-800 text-xs">Resumen de la noticia</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="bg-blue-100 px-2 py-1 rounded">{'{url}'}</code>
+            <span className="text-blue-800 text-xs">URL de la noticia</span>
+          </div>
         </div>
       </div>
     </div>

@@ -55,9 +55,9 @@ export default function AdminNotifications() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Notificaciones</h1>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
           <Link
             href="/admin/notifications/send"
             className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
@@ -84,57 +84,96 @@ export default function AdminNotifications() {
           <p className="text-gray-500">Las notificaciones aparecerán aquí cuando se envíen.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destinatarios</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Noticia</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {history.map((h) => (
-                <tr key={h.id}>
-                  <td className="px-6 py-4 text-gray-500 text-sm">
-                    {new Date(h.created_at).toLocaleDateString('es-ES', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </td>
-                  <td className="px-6 py-4">
-                    <p className="font-medium text-gray-900">{h.title}</p>
-                    {h.body && <p className="text-sm text-gray-500 truncate max-w-xs">{h.body}</p>}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(h.notification_type)}`}>
-                      {getTypeLabel(h.notification_type)}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <Mail className="w-4 h-4" />
-                      {h.recipients_count}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-500 text-sm">
-                    {h.news ? (
-                      <span className="flex items-center gap-1">
-                        <FileText className="w-4 h-4" />
-                        {h.news.title}
-                      </span>
-                    ) : '-'}
-                  </td>
+        <>
+          <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Destinatarios</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Noticia</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y">
+                {history.map((h) => (
+                  <tr key={h.id}>
+                    <td className="px-6 py-4 text-gray-500 text-sm whitespace-nowrap">
+                      {new Date(h.created_at).toLocaleDateString('es-ES', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-gray-900">{h.title}</p>
+                      {h.body && <p className="text-sm text-gray-500 truncate max-w-xs">{h.body}</p>}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(h.notification_type)}`}>
+                        {getTypeLabel(h.notification_type)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600">
+                      <span className="flex items-center gap-1">
+                        <Mail className="w-4 h-4" />
+                        {h.recipients_count}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-500 text-sm">
+                      {h.news ? (
+                        <span className="flex items-center gap-1">
+                          <FileText className="w-4 h-4" />
+                          {h.news.title}
+                        </span>
+                      ) : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="md:hidden space-y-3">
+            {history.map((h) => (
+              <div key={h.id} className="bg-white rounded-xl shadow-sm p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-gray-900">{h.title}</p>
+                    {h.body && <p className="text-sm text-gray-500 truncate">{h.body}</p>}
+                  </div>
+                  <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(h.notification_type)}`}>
+                    {getTypeLabel(h.notification_type)}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                  <span className="flex items-center gap-1">
+                    <Mail className="w-4 h-4" />
+                    {h.recipients_count} destinatarios
+                  </span>
+                  {h.news && (
+                    <span className="flex items-center gap-1">
+                      <FileText className="w-4 h-4" />
+                      {h.news.title}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-xs text-gray-400">
+                  {new Date(h.created_at).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

@@ -82,29 +82,29 @@ export default function AdminPeople() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Personas Registradas</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={exportExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
           >
             <Download className="w-4 h-4" />
-            Excel
+            <span className="hidden sm:inline">Excel</span>
           </button>
           <button
             onClick={exportPDF}
-            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
             <Download className="w-4 h-4" />
-            PDF
+            <span className="hidden sm:inline">PDF</span>
           </button>
           <button
             onClick={copyCSV}
             className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50"
           >
             <Copy className="w-4 h-4" />
-            {copied ? '¡Copiado!' : 'Copiar CSV'}
+            {copied ? '¡Copiado!' : 'CSV'}
           </button>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default function AdminPeople() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -149,6 +149,26 @@ export default function AdminPeople() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="md:hidden space-y-3">
+        {filteredPeople.map((p) => (
+          <div key={p.id} className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-medium text-gray-900">{p.first_name} {p.last_name}</p>
+                <p className="text-sm text-gray-500">{p.identity_doc}</p>
+              </div>
+              <span className={`px-2 py-1 text-xs rounded-full ${p.notifications_email ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                {p.notifications_email ? 'Sí' : 'No'}
+              </span>
+            </div>
+            <div className="mt-2 space-y-1">
+              <p className="text-sm text-gray-600">{p.email}</p>
+              <p className="text-sm text-gray-500">{p.phone}</p>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

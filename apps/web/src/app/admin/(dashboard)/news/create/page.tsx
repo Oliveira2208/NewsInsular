@@ -234,7 +234,7 @@ export default function CreateNews() {
             </label>
 
             {publishMode === 'scheduled' && (
-              <div className="ml-6 mt-2 flex gap-4 items-center">
+              <div className="ml-6 mt-2 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Fecha</label>
                   <input
@@ -242,7 +242,7 @@ export default function CreateNews() {
                     value={scheduledDate}
                     onChange={(e) => setScheduledDate(e.target.value)}
                     min={new Date().toISOString().split('T')[0]}
-                    className="px-3 py-2 border rounded-lg text-sm"
+                    className="px-3 py-2 border rounded-lg text-sm w-full sm:w-auto"
                     required
                   />
                 </div>
@@ -252,7 +252,7 @@ export default function CreateNews() {
                     type="time"
                     value={scheduledTime}
                     onChange={(e) => setScheduledTime(e.target.value)}
-                    className="px-3 py-2 border rounded-lg text-sm"
+                    className="px-3 py-2 border rounded-lg text-sm w-full sm:w-auto"
                     required
                   />
                 </div>
@@ -261,18 +261,18 @@ export default function CreateNews() {
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
+            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 order-1 sm:order-none"
           >
             {loading ? 'Guardando...' : 'Guardar'}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border rounded-lg hover:bg-gray-50"
+            className="px-6 py-2 border rounded-lg hover:bg-gray-50 order-2 sm:order-none"
           >
             Cancelar
           </button>

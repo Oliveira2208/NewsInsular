@@ -130,11 +130,11 @@ export default function SendNotification() {
           </select>
         </div>
 
-        <div className="flex gap-4 pt-4">
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
+            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 order-1 sm:order-none"
           >
             {loading ? 'Enviando...' : 'Enviar notificación'}
           </button>

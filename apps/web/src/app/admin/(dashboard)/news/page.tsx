@@ -77,18 +77,18 @@ export default function AdminNews() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
         <h1 className="text-2xl font-bold text-gray-900">Noticias</h1>
         <Link
           href="/admin/news/create"
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark w-full sm:w-auto justify-center"
         >
           <Plus className="w-4 h-4" />
           Nueva noticia
         </Link>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
@@ -135,6 +135,44 @@ export default function AdminNews() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="md:hidden space-y-4">
+        {news.map((n) => (
+          <div key={n.id} className="bg-white rounded-xl shadow-sm p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 truncate">{n.title}</p>
+                <p className="text-sm text-gray-500 mt-1">{n.category?.name}</p>
+              </div>
+              <div className="flex gap-2">
+                <Link
+                  href={`/admin/news/${n.id}/edit`}
+                  className="p-2 text-gray-500 hover:text-primary"
+                >
+                  <Edit2 className="w-4 h-4" />
+                </Link>
+                <button
+                  onClick={() => deleteNews(n.id, n.published)}
+                  className="p-2 text-gray-500 hover:text-red-500"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {getStatusBadge(n)}
+              {n.scheduled_for && (
+                <p className="text-xs text-gray-500">
+                  {new Date(n.scheduled_for).toLocaleString()}
+                </p>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              {new Date(n.created_at).toLocaleDateString()}
+            </p>
+          </div>
+        ))}
       </div>
     </div>
   )
