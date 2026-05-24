@@ -12,6 +12,9 @@ export interface News {
   summary: string | null
   content: string
   published: boolean
+  published_at: string | null
+  scheduled_for: string | null
+  deleted_at: string | null
   category_id: string | null
   created_at: string
   updated_at: string

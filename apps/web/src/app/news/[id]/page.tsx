@@ -16,6 +16,7 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
     .select('*, category:categories(name), images:news_images(*)')
     .eq('id', id)
     .eq('published', true)
+    .is('deleted_at', null)
     .single()
 
   if (!news) notFound()

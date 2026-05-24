@@ -27,6 +27,7 @@ export default function SendNotification() {
       .from('news')
       .select('id, title')
       .eq('published', true)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .then(({ data }) => setNews(data as NewsOption[] ?? []))
   }, [])

@@ -36,6 +36,7 @@ export default function NewsFeed({ initialNews, categorySlug }: NewsFeedProps) {
       .from('news')
       .select('*, category:categories(*), images:news_images(*)')
       .eq('published', true)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .range(nextPage * PAGE_SIZE, (nextPage + 1) * PAGE_SIZE - 1)
 

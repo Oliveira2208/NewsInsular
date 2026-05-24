@@ -34,6 +34,7 @@ async function getNews(categorySlug?: string) {
       .from('news')
       .select('*, category:categories(*), images:news_images(*)')
       .eq('published', true)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(20)
 
