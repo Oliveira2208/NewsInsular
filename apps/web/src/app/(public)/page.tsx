@@ -30,6 +30,10 @@ async function getNews(categorySlug?: string) {
       .limit(20),
   ])
 
+  if (newsResult.error) {
+    console.error('News query error:', newsResult.error)
+  }
+
   const categoryId = categoryResult.data?.id
   let news = newsResult.data ?? []
 
