@@ -55,11 +55,13 @@ export default function AdminPeople() {
   }, [filteredPeople])
 
   const exportPDF = useCallback(() => {
-    import('jspdf').then((jsPDF) => {
+    import('jspdf').then((jsPDFModule) => {
       import('jspdf-autotable').then(() => {
-        const doc = new jsPDF.jsPDF()
+        const { jsPDF } = jsPDFModule
+        const doc = new jsPDF()
         doc.text('Personas Registradas', 14, 20)
         doc.text(`Fecha: ${new Date().toLocaleDateString('es')}`, 14, 30)
+        // @ts-expect-error - autoTable is added by jspdf-autotable plugin
         doc.autoTable({
           head: [['Nombre', 'Documento', 'Email', 'Teléfono', 'Estado']],
           body: filteredPeople.map((p) => [p.full_name, p.identity_doc, p.email, p.phone, p.state]),
