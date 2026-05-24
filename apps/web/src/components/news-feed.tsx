@@ -20,7 +20,7 @@ export default function NewsFeed({ initialNews, categorySlug }: NewsFeedProps) {
   const [page, setPage] = useState(0)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadingRef = useRef<HTMLDivElement>(null)
-  const effectiveCategorySlug = categorySlug || undefined
+  const CategorySlug = categorySlug || undefined
 
   const PAGE_SIZE = 10
 
@@ -39,13 +39,11 @@ export default function NewsFeed({ initialNews, categorySlug }: NewsFeedProps) {
       .order('created_at', { ascending: false })
       .range(nextPage * PAGE_SIZE, (nextPage + 1) * PAGE_SIZE - 1)
 
-    if (!effectiveCategorySlug) {
-      query = query
-    } else {
+    if (CategorySlug) {
       const { data: catData } = await supabase
         .from('categories')
         .select('id')
-        .eq('slug', effectiveCategorySlug)
+        .eq('slug', CategorySlug)
         .single()
       
       if (catData) {
@@ -72,7 +70,7 @@ export default function NewsFeed({ initialNews, categorySlug }: NewsFeedProps) {
     }
     
     setLoading(false)
-  }, [loading, hasMore, page, effectiveCategorySlug])
+  }, [loading, hasMore, page, CategorySlug])
 
   useEffect(() => {
     setNews(initialNews)
