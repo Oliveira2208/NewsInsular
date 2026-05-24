@@ -66,15 +66,15 @@ export function NotificationsDropdown() {
       {open && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border z-50">
           <div className="p-4 border-b">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
+            <h3 className="font-semibold text-gray-900">Notificaciones</h3>
           </div>
           
           {loading ? (
-            <div className="p-4 text-center text-gray-500">Loading...</div>
+            <div className="p-4 text-center text-gray-500">Cargando...</div>
           ) : notifications.length === 0 ? (
             <div className="p-4 text-center text-gray-500 flex flex-col items-center gap-2">
               <BellOff className="w-8 h-8 text-gray-300" />
-              <p>No notifications</p>
+              <p>Sin notificaciones</p>
             </div>
           ) : (
             <div className="max-h-96 overflow-y-auto">
