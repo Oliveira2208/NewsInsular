@@ -7,41 +7,46 @@ export const dynamic = 'force-dynamic'
 
 async function getCategories() {
   const supabase = await createClient()
-  const { data } = await supabase
-    .from('categories')
-    .select('*')
-    .order('name')
-
-  return data ?? []
+  
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .order('name')
+    
+    if (error) {
+      console.error('Categories error:', error.message, error.details)
+      return []
+    }
+    
+    return data ?? []
+  } catch (e) {
+    console.error('Categories exception:', e)
+    return []
+  }
 }
 
-async function getNews(categorySlug?: string) {
+async function getNews() {
   const supabase = await createClient()
-
-  const [categoryResult, newsResult] = await Promise.all([
-    categorySlug
-      ? supabase.from('categories').select('id').eq('slug', categorySlug).single()
-      : Promise.resolve({ data: null }),
-    supabase
+  
+  try {
+    const { data, error } = await supabase
       .from('news')
       .select('*, category:categories(*), images:news_images(*)')
       .eq('published', true)
       .order('created_at', { ascending: false })
-      .limit(20),
-  ])
+      .limit(20)
 
-  if (newsResult.error) {
-    console.error('News query error:', newsResult.error)
+    if (error) {
+      console.error('News error:', error.message, error.details)
+      return []
+    }
+
+    return data ?? []
+  } catch (e) {
+    console.error('News exception:', e)
+    return []
   }
-
-  const categoryId = categoryResult.data?.id
-  let news = newsResult.data ?? []
-
-  if (categoryId) {
-    news = news.filter((n) => n.category_id === categoryId)
-  }
-
-  return news
 }
 
 export default async function HomePage({
@@ -51,18 +56,14 @@ export default async function HomePage({
 }) {
   const params = await searchParams
 
-  const [categories, news] = await Promise.all([
-    getCategories(),
-    getNews(params.category),
-  ])
-
-  console.log('DEBUG - categories:', categories.length, 'news:', news.length)
+  const categories = await getCategories()
+  const news = await getNews()
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">Noticias</h1>
       
-      <div className="mb-4 p-4 bg-yellow-100 rounded text-sm">
+      <div className="mb-4 p-4 bg-yellow-100 rounded text-sm font-mono">
         Debug: {categories.length} categorías, {news.length} noticias
       </div>
 
