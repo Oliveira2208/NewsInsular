@@ -122,7 +122,9 @@ function CreateNewsContent() {
     }
 
     const insertData = {
-      ...form,
+      title: form.title,
+      summary: form.summary,
+      content: form.content,
       published,
       published_at: publishedAt,
       scheduled_for: scheduledFor,

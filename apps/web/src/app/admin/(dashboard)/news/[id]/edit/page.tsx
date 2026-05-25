@@ -127,7 +127,9 @@ export default function EditNews({ params }: { params: { id: string } }) {
     }
 
     const updateData = {
-      ...form,
+      title: form.title,
+      summary: form.summary,
+      content: form.content,
       published,
       published_at: publishedAt,
       scheduled_for: scheduledFor,
