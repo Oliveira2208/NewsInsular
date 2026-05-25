@@ -15,6 +15,8 @@ import Underline from '@tiptap/extension-underline'
 import Highlight from '@tiptap/extension-highlight'
 import { Color } from '@tiptap/extension-color'
 import { TextStyle } from '@tiptap/extension-text-style'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
 import {
   Bold,
   Italic,
@@ -108,6 +110,10 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
       TextAlign.configure({
         types: ['heading', 'paragraph'],
       }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
       Placeholder.configure({
         placeholder: 'Escribe el contenido aquí...',
       }),
@@ -123,6 +129,24 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
       },
     },
   })
+
+  const safeIsActive = useCallback((type: string, attrs?: Record<string, unknown>): boolean => {
+    if (!editor) return false
+    try {
+      return editor.isActive(type, attrs)
+    } catch {
+      return false
+    }
+  }, [editor])
+
+  const safeCan = useCallback((action: 'undo' | 'redo'): boolean => {
+    if (!editor) return false
+    try {
+      return action === 'undo' ? editor.can().undo() : editor.can().redo()
+    } catch {
+      return false
+    }
+  }, [editor])
 
   const setLink = useCallback(() => {
     if (!editor) return
@@ -173,23 +197,25 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
     setShowColor(false)
   }
 
-  const getIsActive = (type: string, attrs?: Record<string, unknown>): boolean => {
-    if (!editor) return false
+  const getTextColor = () => {
+    if (!editor) return '#000'
     try {
-      return editor.isActive(type, attrs)
+      return editor.getAttributes('textStyle')?.color || '#000'
     } catch {
-      return false
+      return '#000'
     }
   }
 
-  const getIsActiveAlign = (align: string): boolean => {
-    if (!editor) return false
-    try {
-      return editor.isActive({ textAlign: align as 'left' | 'center' | 'right' | 'justify' })
-    } catch {
-      return false
-    }
+  const getIsActive = (type: string, attrs?: Record<string, unknown>): boolean => {
+    return safeIsActive(type, attrs)
   }
+
+const getIsActiveAlign = (align: string): boolean => {
+    return safeIsActive('paragraph', { textAlign: align as 'left' | 'center' | 'right' | 'justify' })
+  }
+
+  const canUndo = () => safeCan('undo')
+  const canRedo = () => safeCan('redo')
 
   const ToolbarButton = ({
     onClick,
@@ -216,33 +242,6 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
       {children}
     </button>
   )
-
-  const getTextColor = () => {
-    if (!editor) return '#000'
-    try {
-      return editor.getAttributes('textStyle')?.color || '#000'
-    } catch {
-      return '#000'
-    }
-  }
-
-  const canUndo = () => {
-    if (!editor) return false
-    try {
-      return editor.can().undo()
-    } catch {
-      return false
-    }
-  }
-
-  const canRedo = () => {
-    if (!editor) return false
-    try {
-      return editor.can().redo()
-    } catch {
-      return false
-    }
-  }
 
   const Dropdown = ({
     isOpen,
@@ -419,6 +418,25 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
           )}
         </div>
       )}
+
+      <style jsx global>{`
+        .ProseMirror h1 { font-size: 2em; font-weight: bold; margin: 0.67em 0; color: #1a1a1a; }
+        .ProseMirror h2 { font-size: 1.5em; font-weight: bold; margin: 0.83em 0; color: #1a1a1a; }
+        .ProseMirror h3 { font-size: 1.17em; font-weight: bold; margin: 1em 0; color: #1a1a1a; }
+        .ProseMirror table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        .ProseMirror table td, .ProseMirror table th { border: 1px solid #ddd; padding: 8px; }
+        .ProseMirror table th { background-color: #f5f5f5; font-weight: bold; }
+        .ProseMirror blockquote { border-left: 3px solid #ccc; margin: 1em 0; padding-left: 1em; color: #666; }
+        .ProseMirror ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+        .ProseMirror ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5em; }
+        .ProseMirror ul[data-type="taskList"] li input { margin-top: 0.4em; }
+        .ProseMirror hr { border: none; border-top: 1px solid #ccc; margin: 1.5em 0; }
+        .ProseMirror code { background-color: #f4f4f4; padding: 0.2em 0.4em; border-radius: 3px; font-family: monospace; }
+        .ProseMirror pre { background-color: #f4f4f4; padding: 1em; border-radius: 5px; overflow-x: auto; }
+        .ProseMirror pre code { background: none; padding: 0; }
+        .ProseMirror mark { background-color: #ffff00; padding: 0.1em 0.2em; }
+        .ProseMirror mark[data-color] { padding: 0.1em 0.2em; }
+      `}</style>
     </div>
   )
 }
