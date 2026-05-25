@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'npm:resend@3'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 

@@ -1,36 +1,26 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { Resend } from 'npm:resend@3'
-
-const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+interface SendEmailOptions {
+  to: string
+  subject: string
+  html: string
+  from?: string
 }
 
-Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
+export async function sendEmail(options: SendEmailOptions): Promise<boolean> {
   try {
-    const { email, fullName, unsubscribe_token } = await req.json()
+    const response = await fetch('/api/send-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options),
+    })
+    return response.ok
+  } catch (error) {
+    console.error('Email send error:', error)
+    return false
+  }
+}
 
-    if (!email || !fullName) {
-      return new Response(
-        JSON.stringify({ error: 'Email and fullName are required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const appUrl = Deno.env.get('NEXT_PUBLIC_APP_URL') || 'http://localhost:3000'
-
-    const unsubscribeLink = unsubscribe_token 
-      ? `${appUrl}/unsubscribe?token=${unsubscribe_token}`
-      : null
-
-    const html = `
+export function generateWelcomeEmailHtml(fullName: string, unsubscribeLink: string | null, appUrl: string) {
+  return `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -84,23 +74,5 @@ Deno.serve(async (req) => {
   </div>
 </body>
 </html>
-    `
-
-    const result = await resend.emails.send({
-      from: 'NewsInsular <noreply@newsinsular.resend.dev>',
-      to: email,
-      subject: '¡Bienvenido a NewsInsular!',
-      html,
-    })
-
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
-})
+  `
+}

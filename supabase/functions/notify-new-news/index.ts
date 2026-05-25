@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { Resend } from 'resend'
-import { createClient } from '@supabase/supabase-js'
+import { Resend } from 'npm:resend@3'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
@@ -80,7 +80,7 @@ export async function notifyNewNews(data: NotifyNewNewsData) {
       `
 
       await resend.emails.send({
-        from: 'NewsInsular <noreply@newsinsular.com>',
+        from: 'NewsInsular <noreply@newsinsular.resend.dev>',
         to: [person.email],
         subject: title,
         html,
