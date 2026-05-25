@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatIdentityDoc } from '@/lib/utils'
 import { z } from 'zod'
@@ -14,12 +14,56 @@ const registerSchema = z.object({
   birth_date: z.string().min(1, 'La fecha de nacimiento es requerida'),
   phone: z.string().regex(/^04(12|14|16|22|24|26)-\d{7}$/, 'Formato inválido. Use: 0412-1234567'),
   email: z.string().email('Email inválido'),
+  state_id: z.number().min(1, 'El estado es requerido'),
+  municipality_id: z.number().min(1, 'El municipio es requerido'),
+  parish_id: z.number().min(1, 'La parroquia es requerida'),
+  commune_id: z.number().min(1, 'La comuna es requerida'),
+  address: z.string().min(5, 'La dirección es requerida'),
   notifications_email: z.boolean(),
 })
 
 type RegisterFormData = z.infer<typeof registerSchema>
-
 type FieldName = keyof RegisterFormData
+
+interface State {
+  id: number
+  name: string
+}
+
+interface Municipality {
+  id: number
+  name: string
+  state_id: number
+}
+
+interface Parish {
+  id: number
+  name: string
+  municipality_id: number
+}
+
+interface Commune {
+  id: number
+  name: string
+  municipality_id: number
+}
+
+function formatPhoneNumber(value: string, previousValue: string): string {
+  const numbers = value.replace(/\D/g, '')
+  
+  if (numbers.length <= 4) {
+    return numbers
+  }
+  
+  const prefix = numbers.substring(0, 4)
+  const suffix = numbers.substring(4, 11)
+  
+  if (numbers.length <= 11) {
+    return `${prefix}-${suffix}`
+  }
+  
+  return previousValue
+}
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -33,10 +77,39 @@ export default function RegisterPage() {
     birth_date: '',
     phone: '',
     email: '',
+    state_id: 0,
+    municipality_id: 0,
+    parish_id: 0,
+    commune_id: 0,
+    address: '',
     notifications_email: true,
   })
+  const [states, setStates] = useState<State[]>([])
+  const [municipalities, setMunicipalities] = useState<Municipality[]>([])
+  const [parishes, setParishes] = useState<Parish[]>([])
+  const [communes, setCommunes] = useState<Commune[]>([])
 
-  const validateField = useCallback((field: FieldName, value: string): string | null => {
+  useEffect(() => {
+    const fetchLocations = async () => {
+      const supabase = createClient()
+      
+      const [statesRes, municipalitiesRes, parishesRes, communesRes] = await Promise.all([
+        supabase.from('states').select('*').order('name'),
+        supabase.from('municipalities').select('*').order('name'),
+        supabase.from('parishes').select('*').order('name'),
+        supabase.from('communes').select('*').order('name'),
+      ])
+      
+      setStates(statesRes.data || [])
+      setMunicipalities(municipalitiesRes.data || [])
+      setParishes(parishesRes.data || [])
+      setCommunes(communesRes.data || [])
+    }
+    
+    fetchLocations()
+  }, [])
+
+  const validateField = useCallback((field: FieldName, value: string | number): string | null => {
     const fieldSchema = registerSchema.shape[field]
     if (!fieldSchema) return null
 
@@ -47,18 +120,41 @@ export default function RegisterPage() {
     return null
   }, [])
 
-  const handleBlur = (field: FieldName, value: string) => {
+  const handleBlur = (field: FieldName, value: string | number) => {
     setTouched(prev => ({ ...prev, [field]: true }))
     const error = validateField(field, value)
     setErrors(prev => ({ ...prev, [field]: error || undefined }))
   }
 
-  const handleChange = (field: FieldName, value: string) => {
-    setForm(prev => ({ ...prev, [field]: value }))
+  const handleChange = (field: FieldName, value: string | number) => {
+    setForm(prev => {
+      const newForm = { ...prev, [field]: value }
+      
+      if (field === 'state_id') {
+        newForm.municipality_id = 0
+        newForm.parish_id = 0
+        newForm.commune_id = 0
+      } else if (field === 'municipality_id') {
+        newForm.parish_id = 0
+        newForm.commune_id = 0
+      }
+      
+      return newForm
+    })
     
     if (touched[field]) {
       const error = validateField(field, value)
       setErrors(prev => ({ ...prev, [field]: error || undefined }))
+    }
+  }
+
+  const handlePhoneChange = (value: string) => {
+    const formatted = formatPhoneNumber(value, form.phone)
+    setForm(prev => ({ ...prev, phone: formatted }))
+    
+    if (touched.phone) {
+      const error = validateField('phone', formatted)
+      setErrors(prev => ({ ...prev, phone: error || undefined }))
     }
   }
 
@@ -73,7 +169,7 @@ export default function RegisterPage() {
       setErrors(fieldErrors)
       
       const allTouched: Partial<Record<FieldName, boolean>> = {}
-      const allFields: FieldName[] = ['full_name', 'identity_prefix', 'identity_number', 'birth_date', 'phone', 'email']
+      const allFields: FieldName[] = ['full_name', 'identity_prefix', 'identity_number', 'birth_date', 'phone', 'email', 'state_id', 'municipality_id', 'parish_id', 'commune_id', 'address']
       allFields.forEach(f => { allTouched[f] = true })
       setTouched(allTouched)
       
@@ -91,23 +187,37 @@ export default function RegisterPage() {
     const supabase = createClient()
     const identity_doc = formatIdentityDoc(form.identity_prefix, form.identity_number)
 
+    const stateName = states.find(s => s.id === form.state_id)?.name || ''
+    const municipalityName = municipalities.find(m => m.id === form.municipality_id)?.name || ''
+    const parishName = parishes.find(p => p.id === form.parish_id)?.name || ''
+    const communeName = communes.find(c => c.id === form.commune_id)?.name || ''
+
     const { data, error } = await supabase
       .from('people')
       .insert({
         identity_doc,
-        first_name: form.full_name.split(' ')[0] || form.full_name,
-        last_name: form.full_name.split(' ').slice(1).join(' ') || form.full_name,
+        full_name: form.full_name,
+        birth_date: form.birth_date,
         phone: form.phone,
         email: form.email,
-        notifications_email: form.notifications_email,
+        state: stateName,
+        municipality: municipalityName,
+        parish: parishName,
+        commune: communeName,
+        address: form.address,
       })
       .select()
       .single()
 
     if (error) {
-      if (error.message.includes('unique')) {
-        setErrors({ email: 'Este email ya está registrado' })
-        setTouched(prev => ({ ...prev, email: true }))
+      if (error.message.includes('unique') || error.code === '23505') {
+        if (error.message.includes('identity_doc')) {
+          setErrors({ identity_number: 'Esta cédula ya está registrada' })
+          setTouched(prev => ({ ...prev, identity_number: true }))
+        } else if (error.message.includes('email')) {
+          setErrors({ email: 'Este email ya está registrado' })
+          setTouched(prev => ({ ...prev, email: true }))
+        }
       }
       setLoading(false)
       return
@@ -119,7 +229,7 @@ export default function RegisterPage() {
         if (fcmToken) {
           await supabase
             .from('people')
-            .update({ fcm_token: fcmToken })
+            .update({ push_token: fcmToken })
             .eq('id', data.id)
         }
       } catch (err) {
@@ -133,10 +243,13 @@ export default function RegisterPage() {
 
   const getFieldClass = (field: FieldName): string => {
     if (!touched[field]) return 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary'
-    return errors[field] 
-      ? 'w-full px-4 py-2 border border-red-500 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500' 
-      : 'w-full px-4 py-2 border border-green-500 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500'
+    if (errors[field]) return 'w-full px-4 py-2 border border-red-500 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500'
+    return 'w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary'
   }
+
+  const filteredMunicipalities = form.state_id ? municipalities.filter(m => m.state_id === form.state_id) : []
+  const filteredParishes = form.municipality_id ? parishes.filter(p => p.municipality_id === form.municipality_id) : []
+  const filteredCommunes = form.municipality_id ? communes.filter(c => c.municipality_id === form.municipality_id) : []
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
@@ -157,16 +270,7 @@ export default function RegisterPage() {
             placeholder="Juan Pérez"
           />
           {touched.full_name && errors.full_name && (
-            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-red-500 rounded-full" />
-              {errors.full_name}
-            </p>
-          )}
-          {touched.full_name && !errors.full_name && form.full_name.length >= 2 && (
-            <p className="text-green-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-green-500 rounded-full" />
-              Válido
-            </p>
+            <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>
           )}
         </div>
 
@@ -178,7 +282,6 @@ export default function RegisterPage() {
             <select
               value={form.identity_prefix}
               onChange={(e) => handleChange('identity_prefix', e.target.value)}
-              onBlur={(e) => handleBlur('identity_prefix', e.target.value)}
               className="px-4 py-2 border rounded-lg"
             >
               <option value="V">V</option>
@@ -195,16 +298,7 @@ export default function RegisterPage() {
             />
           </div>
           {touched.identity_number && errors.identity_number && (
-            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-red-500 rounded-full" />
-              {errors.identity_number}
-            </p>
-          )}
-          {touched.identity_number && !errors.identity_number && form.identity_number.length >= 7 && (
-            <p className="text-green-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-green-500 rounded-full" />
-              Válido
-            </p>
+            <p className="text-red-500 text-sm mt-1">{errors.identity_number}</p>
           )}
         </div>
 
@@ -220,42 +314,24 @@ export default function RegisterPage() {
             className={getFieldClass('birth_date')}
           />
           {touched.birth_date && errors.birth_date && (
-            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-red-500 rounded-full" />
-              {errors.birth_date}
-            </p>
-          )}
-          {touched.birth_date && !errors.birth_date && form.birth_date && (
-            <p className="text-green-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-green-500 rounded-full" />
-              Válido
-            </p>
+            <p className="text-red-500 text-sm mt-1">{errors.birth_date}</p>
           )}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Teléfono (formato: 0412-1234567)
+            Teléfono
           </label>
           <input
             type="tel"
             value={form.phone}
-            onChange={(e) => handleChange('phone', e.target.value)}
-            onBlur={(e) => handleBlur('phone', e.target.value)}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            onBlur={(e) => handleBlur('phone', form.phone)}
             className={getFieldClass('phone')}
             placeholder="0412-1234567"
           />
           {touched.phone && errors.phone && (
-            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-red-500 rounded-full" />
-              {errors.phone}
-            </p>
-          )}
-          {touched.phone && !errors.phone && form.phone && (
-            <p className="text-green-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-green-500 rounded-full" />
-              Válido
-            </p>
+            <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
           )}
           <p className="text-xs text-gray-400 mt-1">Códigos válidos: 0412, 0414, 0416, 0422, 0424, 0426</p>
         </div>
@@ -273,16 +349,107 @@ export default function RegisterPage() {
             placeholder="correo@ejemplo.com"
           />
           {touched.email && errors.email && (
-            <p className="text-red-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-red-500 rounded-full" />
-              {errors.email}
-            </p>
+            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
           )}
-          {touched.email && !errors.email && form.email.includes('@') && (
-            <p className="text-green-500 text-sm mt-1 flex items-center gap-1">
-              <span className="inline-block w-1 h-1 bg-green-500 rounded-full" />
-              Válido
-            </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Estado
+          </label>
+          <select
+            value={form.state_id || ''}
+            onChange={(e) => handleChange('state_id', Number(e.target.value))}
+            onBlur={(e) => handleBlur('state_id', Number(e.target.value))}
+            className={getFieldClass('state_id')}
+          >
+            <option value="">Seleccionar estado</option>
+            {states.map((state) => (
+              <option key={state.id} value={state.id}>{state.name}</option>
+            ))}
+          </select>
+          {touched.state_id && errors.state_id && (
+            <p className="text-red-500 text-sm mt-1">{errors.state_id}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Municipio
+          </label>
+          <select
+            value={form.municipality_id || ''}
+            onChange={(e) => handleChange('municipality_id', Number(e.target.value))}
+            onBlur={(e) => handleBlur('municipality_id', Number(e.target.value))}
+            className={getFieldClass('municipality_id')}
+            disabled={!form.state_id}
+          >
+            <option value="">Seleccionar municipio</option>
+            {filteredMunicipalities.map((m) => (
+              <option key={m.id} value={m.id}>{m.name}</option>
+            ))}
+          </select>
+          {touched.municipality_id && errors.municipality_id && (
+            <p className="text-red-500 text-sm mt-1">{errors.municipality_id}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Parroquia
+          </label>
+          <select
+            value={form.parish_id || ''}
+            onChange={(e) => handleChange('parish_id', Number(e.target.value))}
+            onBlur={(e) => handleBlur('parish_id', Number(e.target.value))}
+            className={getFieldClass('parish_id')}
+            disabled={!form.municipality_id}
+          >
+            <option value="">Seleccionar parroquia</option>
+            {filteredParishes.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+          {touched.parish_id && errors.parish_id && (
+            <p className="text-red-500 text-sm mt-1">{errors.parish_id}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Comuna
+          </label>
+          <select
+            value={form.commune_id || ''}
+            onChange={(e) => handleChange('commune_id', Number(e.target.value))}
+            onBlur={(e) => handleBlur('commune_id', Number(e.target.value))}
+            className={getFieldClass('commune_id')}
+            disabled={!form.municipality_id}
+          >
+            <option value="">Seleccionar comuna</option>
+            {filteredCommunes.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          {touched.commune_id && errors.commune_id && (
+            <p className="text-red-500 text-sm mt-1">{errors.commune_id}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Dirección
+          </label>
+          <textarea
+            value={form.address}
+            onChange={(e) => handleChange('address', e.target.value)}
+            onBlur={(e) => handleBlur('address', e.target.value)}
+            className={getFieldClass('address')}
+            placeholder="Dirección completa"
+            rows={2}
+          />
+          {touched.address && errors.address && (
+            <p className="text-red-500 text-sm mt-1">{errors.address}</p>
           )}
         </div>
 
