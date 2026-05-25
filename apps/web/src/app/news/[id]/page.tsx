@@ -7,6 +7,11 @@ import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
+function sanitizeContent(content: string): string {
+  if (!content) return ''
+  return content.replace(/blob:[^"'\s]+/g, '/placeholder-image.png')
+}
+
 export default async function NewsDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
@@ -21,6 +26,7 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
 
   const sortedImages = news?.images?.sort((a: { position: number }, b: { position: number }) => a.position - b.position) ?? []
   const newsCategories = news?.categories?.map((nc: { categories: { name: string } }) => nc.categories) ?? []
+  const sanitizedContent = sanitizeContent(news?.content ?? '')
 
   return (
     <div className="min-h-screen bg-gray-50">

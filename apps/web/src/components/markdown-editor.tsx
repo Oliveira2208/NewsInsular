@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
@@ -18,6 +18,7 @@ import { TextStyle } from '@tiptap/extension-text-style'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import { createClient } from '@/lib/supabase/client'
+import { X, Move } from 'lucide-react'
 import {
   Bold,
   Italic,
@@ -130,8 +131,10 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'max-w-full h-auto rounded-lg',
+          class: 'max-w-full h-auto rounded-lg cursor-pointer',
+          draggable: 'true',
         },
+        inline: false,
       }),
       Table.configure({
         resizable: true,
@@ -161,6 +164,20 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
       attributes: {
         class: 'prose prose-sm sm:prose-base lg:prose-lg max-w-none focus:outline-none min-h-[100px] p-4',
         style: `min-height: ${typeof height === 'number' ? `${height}px` : height}`,
+      },
+      handleClick: (view, pos, event) => {
+        if (!editor) return false
+        const target = event.target as HTMLElement
+        if (target.tagName === 'IMG') {
+          const { left, top } = target.getBoundingClientRect()
+          setImageMenuPos({ x: left + target.clientWidth / 2, y: top })
+          setSelectedImage({ src: (target as HTMLImageElement).src, x: left, y: top })
+          editor.commands.selectParentNode()
+          return true
+        }
+        setSelectedImage(null)
+        setImageMenuPos(null)
+        return false
       },
       handleDrop: (view, event, slice, moved) => {
         if (!editor) return false
@@ -333,6 +350,33 @@ const getIsActiveAlign = (align: string): boolean => {
 
   const canUndo = () => safeCan('undo')
   const canRedo = () => safeCan('redo')
+
+  const deleteImage = useCallback(() => {
+    if (!editor) return
+    editor.chain().focus().deleteSelection().run()
+    setSelectedImage(null)
+    setImageMenuPos(null)
+  }, [editor])
+
+  const [selectedImage, setSelectedImage] = useState<{ src: string; x: number; y: number } | null>(null)
+  const [imageMenuPos, setImageMenuPos] = useState<{ x: number; y: number } | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        const target = e.target as HTMLElement
+        if (target.tagName !== 'IMG') {
+          setSelectedImage(null)
+          setImageMenuPos(null)
+        }
+      }
+    }
+    if (selectedImage) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [selectedImage])
 
   const ToolbarButton = ({
     onClick,
@@ -519,6 +563,30 @@ const getIsActiveAlign = (align: string): boolean => {
       ) : (
         <div className="relative">
           <EditorContent editor={editor} />
+          {selectedImage && (
+            <div
+              ref={menuRef}
+              className="fixed bg-white rounded-lg shadow-lg border p-2 z-50 flex items-center gap-2"
+              style={{ 
+                left: `${imageMenuPos?.x ?? 0}px`, 
+                top: `${imageMenuPos?.y ?? 0}px`,
+                transform: 'translateX(-50%) translateY(-120%)'
+              }}
+            >
+              <span className="text-xs text-gray-500 flex items-center gap-1">
+                <Move className="w-3 h-3" />
+                Arrastra para mover
+              </span>
+              <button
+                type="button"
+                onClick={deleteImage}
+                className="p-1.5 rounded hover:bg-red-100 text-red-600 transition-colors"
+                title="Eliminar imagen"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           {isUploading && (
             <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
               <div className="flex flex-col items-center gap-2">
@@ -580,6 +648,14 @@ const getIsActiveAlign = (align: string): boolean => {
         .ProseMirror pre code { background: none; padding: 0; }
         .ProseMirror mark { background-color: #ffff00; padding: 0.1em 0.2em; }
         .ProseMirror mark[data-color] { padding: 0.1em 0.2em; }
+        .ProseMirror img { cursor: pointer; transition: outline 0.2s; }
+        .ProseMirror img.ProseMirror-selectednode { outline: 2px solid #3b82f6; }
+        .ProseMirror .image-node-wrapper { position: relative; display: inline-block; width: 100%; }
+        .ProseMirror .image-node-wrapper::before { content: ''; position: absolute; left: -8px; top: 50%; transform: translateY(-50%); width: 6px; height: 24px; background: #3b82f6; border-radius: 3px; cursor: grab; opacity: 0; transition: opacity 0.2s; }
+        .ProseMirror .image-node-wrapper:hover::before { opacity: 1; }
+        .ProseMirror img[data-drag-handle] { cursor: grab; }
+        .ProseMirror img[data-drag-handle]:active { cursor: grabbing; }
+        .ProseMirror .ProseMirror-selectednode[data-drag-handle] { cursor: grabbing; }
       `}</style>
     </div>
   )

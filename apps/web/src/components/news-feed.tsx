@@ -8,6 +8,12 @@ import { formatDate } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import type { News } from '@/lib/types'
 
+function sanitizeImageUrl(url: string | undefined): string {
+  if (!url) return '/placeholder.svg'
+  if (url.startsWith('blob:')) return '/placeholder.svg'
+  return url
+}
+
 interface NewsFeedProps {
   initialNews: News[]
   categorySlug?: string
@@ -180,7 +186,7 @@ function NewsCard({ news }: { news: News }) {
           {images.length > 0 ? (
             <>
               <Image
-                src={images[currentImage].url}
+                src={sanitizeImageUrl(images[currentImage].url)}
                 alt={news.title}
                 fill
                 className="object-cover"
