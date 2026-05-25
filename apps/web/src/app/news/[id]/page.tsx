@@ -90,7 +90,21 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
             <div className="mt-8 pt-6 border-t border-gray-100">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500">NewsInsular</span>
-                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors">
+                <button 
+                  onClick={() => {
+                    if (navigator.share) {
+                      navigator.share({
+                        title: news.title,
+                        text: news.summary || news.title,
+                        url: window.location.href,
+                      })
+                    } else {
+                      navigator.clipboard.writeText(window.location.href)
+                      alert('Enlace copiado al portapapeles')
+                    }
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors"
+                >
                   <Share2 className="w-4 h-4" />
                   Compartir
                 </button>

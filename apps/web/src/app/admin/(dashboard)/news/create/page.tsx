@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense, DragEvent, ChangeEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Category } from '@/lib/types'
 import MarkdownEditor from '@/components/markdown-editor'
+import { Eye, X, Upload, Image as ImageIcon } from 'lucide-react'
 
 type PublishMode = 'draft' | 'now' | 'scheduled'
 
@@ -35,6 +36,9 @@ function CreateNewsContent() {
     published: false,
   })
   const [images, setImages] = useState<File[]>([])
+  const [imagePreviews, setImagePreviews] = useState<string[]>([])
+  const [showPreview, setShowPreview] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -102,6 +106,45 @@ function CreateNewsContent() {
     })
     await Promise.all(uploads)
   }, [])
+
+  const handleDragOver = useCallback((e: DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback((e: DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
+    if (files.length > 0) {
+      const newImages = [...images, ...files]
+      setImages(newImages)
+      const newPreviews = newImages.map(f => URL.createObjectURL(f))
+      setImagePreviews(newPreviews)
+    }
+  }, [images])
+
+  const handleImageRemove = useCallback((index: number) => {
+    const newImages = images.filter((_, i) => i !== index)
+    const newPreviews = imagePreviews.filter((_, i) => i !== index)
+    setImages(newImages)
+    setImagePreviews(newPreviews)
+  }, [images, imagePreviews])
+
+  const handleImageSelect = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith('image/'))
+    if (files.length > 0) {
+      const newImages = [...images, ...files]
+      setImages(newImages)
+      const newPreviews = newImages.map(f => URL.createObjectURL(f))
+      setImagePreviews(newPreviews)
+    }
+  }, [images])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -304,13 +347,56 @@ function CreateNewsContent() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Imágenes de portada</label>
-          <input
-            type="file"
-            multiple
-            accept="image/*"
-            onChange={(e) => setImages([...e.target.files!])}
-            className="w-full"
-          />
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+              isDragging ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-gray-400'
+            }`}
+          >
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageSelect}
+              className="hidden"
+              id="image-upload"
+            />
+            <label htmlFor="image-upload" className="cursor-pointer">
+              <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-sm text-gray-600">
+                Arrastra imágenes aquí o <span className="text-primary font-medium">haz clic para seleccionar</span>
+              </p>
+              <p className="text-xs text-gray-500 mt-1">PNG, JPG hasta 10MB</p>
+            </label>
+          </div>
+
+          {imagePreviews.length > 0 && (
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {imagePreviews.map((preview, index) => (
+                <div key={index} className="relative group">
+                  <img
+                    src={preview}
+                    alt={`Preview ${index + 1}`}
+                    className="w-full h-32 object-cover rounded-lg border"
+                  />
+                  {index === 0 && (
+                    <span className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded-full">
+                      Portada
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleImageRemove(index)}
+                    className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <p className="text-xs text-gray-500 mt-1">La primera imagen se usará como portada principal</p>
         </div>
 
@@ -383,20 +469,76 @@ function CreateNewsContent() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <button
+            type="button"
+            onClick={() => setShowPreview(true)}
+            className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2 order-1 sm:order-none"
+          >
+            <Eye className="w-4 h-4" />
+            Vista previa
+          </button>
+          <button
             type="submit"
             disabled={loading}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 order-1 sm:order-none"
+            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 order-2 sm:order-none"
           >
             {loading ? 'Guardando...' : 'Guardar'}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="px-6 py-2 border rounded-lg hover:bg-gray-50 order-2 sm:order-none"
+            className="px-6 py-2 border rounded-lg hover:bg-gray-50 order-3 sm:order-none"
           >
             Cancelar
           </button>
         </div>
+
+        {showPreview && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+                <h3 className="font-semibold">Vista previa de la noticia</h3>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="p-6">
+                {imagePreviews[0] && (
+                  <div className="relative aspect-[21/9] bg-gray-100 rounded-xl mb-6 overflow-hidden">
+                    <img
+                      src={imagePreviews[0]}
+                      alt="Portada"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  {form.category_ids.map((catId) => {
+                    const cat = categories.find(c => c.id === catId)
+                    return cat ? (
+                      <span key={catId} className="inline-block px-3 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">
+                        {cat.name}
+                      </span>
+                    ) : null
+                  })}
+                </div>
+                <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
+                  {form.title || 'Sin título'}
+                </h1>
+                {form.summary && (
+                  <p className="text-lg md:text-xl text-gray-600 mb-6 md:mb-8 leading-relaxed font-medium border-l-4 border-blue-500 pl-4">
+                    {form.summary}
+                  </p>
+                )}
+                <div className="news-content text-gray-700 leading-relaxed md:text-lg">
+                  <div dangerouslySetInnerHTML={{ __html: form.content }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   )
