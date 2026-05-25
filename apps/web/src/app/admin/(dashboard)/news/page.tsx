@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Plus, Edit2, Trash2, Calendar } from 'lucide-react'
+import { Plus, Edit2, Trash2, Calendar, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { News } from '@/lib/types'
 
@@ -39,6 +39,7 @@ function getStatusBadge(news: News) {
 export default function AdminNews() {
   const [news, setNews] = useState<News[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const supabase = createClient()
@@ -70,6 +71,11 @@ export default function AdminNews() {
     setLoading(false)
   }, [])
 
+  const filteredNews = news.filter((n) =>
+    n.title?.toLowerCase().includes(search.toLowerCase()) ||
+    n.categories?.some((c: any) => c.categories?.name?.toLowerCase().includes(search.toLowerCase()))
+  )
+
   const deleteNews = useCallback(async (id: string, isPublished: boolean) => {
     if (isPublished) {
       alert('No se pueden eliminar noticias publicadas. Puedes despublicarlas primero.')
@@ -96,6 +102,19 @@ export default function AdminNews() {
         </Link>
       </div>
 
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por título o categoría..."
+            className="w-full pl-10 pr-4 py-2 border rounded-lg"
+          />
+        </div>
+      </div>
+
       <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-hidden">
         <table className="w-full">
           <thead className="bg-gray-50">
@@ -108,7 +127,7 @@ export default function AdminNews() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {news.map((n) => (
+            {filteredNews.map((n) => (
               <tr key={n.id}>
                 <td className="px-6 py-4">
                   <p className="font-medium text-gray-900">{n.title}</p>
@@ -148,7 +167,7 @@ export default function AdminNews() {
       </div>
 
       <div className="md:hidden space-y-4">
-        {news.map((n) => (
+        {filteredNews.map((n) => (
           <div key={n.id} className="bg-white rounded-xl shadow-sm p-4">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">

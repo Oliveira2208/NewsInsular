@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Bell, Mail, Settings, Plus, FileText, FileTextIcon } from 'lucide-react'
+import { Bell, Mail, Settings, Plus, FileText, FileTextIcon, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
 interface NotificationHistory {
@@ -19,6 +19,7 @@ interface NotificationHistory {
 export default function AdminNotifications() {
   const [history, setHistory] = useState<NotificationHistory[]>([])
   const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
 
   useEffect(() => {
     const supabase = createClient()
@@ -32,6 +33,12 @@ export default function AdminNotifications() {
         setLoading(false)
       })
   }, [])
+
+  const filteredHistory = history.filter((h) =>
+    h.title?.toLowerCase().includes(search.toLowerCase()) ||
+    h.body?.toLowerCase().includes(search.toLowerCase()) ||
+    h.news?.title?.toLowerCase().includes(search.toLowerCase())
+  )
 
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
@@ -82,6 +89,19 @@ export default function AdminNotifications() {
         </div>
       </div>
 
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por título, mensaje o noticia..."
+            className="w-full pl-10 pr-4 py-2 border rounded-lg"
+          />
+        </div>
+      </div>
+
       {loading ? (
         <div className="animate-pulse">Cargando...</div>
       ) : history.length === 0 ? (
@@ -104,7 +124,7 @@ export default function AdminNotifications() {
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {history.map((h) => (
+                {filteredHistory.map((h) => (
                   <tr key={h.id}>
                     <td className="px-6 py-4 text-gray-500 text-sm whitespace-nowrap">
                       {new Date(h.created_at).toLocaleDateString('es-ES', {
@@ -145,7 +165,7 @@ export default function AdminNotifications() {
           </div>
 
           <div className="md:hidden space-y-3">
-            {history.map((h) => (
+            {filteredHistory.map((h) => (
               <div key={h.id} className="bg-white rounded-xl shadow-sm p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Edit2, Trash2 } from 'lucide-react'
+import { Plus, Edit2, Trash2, Search } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import MarkdownEditor from '@/components/markdown-editor'
 
@@ -20,6 +20,7 @@ export default function NotificationTemplates() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
   const [form, setForm] = useState({
     name: '',
     title_template: '',
@@ -87,6 +88,12 @@ export default function NotificationTemplates() {
     setShowForm(false)
   }
 
+  const filteredTemplates = templates.filter((t) =>
+    t.name?.toLowerCase().includes(search.toLowerCase()) ||
+    t.title_template?.toLowerCase().includes(search.toLowerCase()) ||
+    t.body_template?.toLowerCase().includes(search.toLowerCase())
+  )
+
   const getTypeLabel = (type: string) => {
     const labels: Record<string, string> = {
       'email_push': 'Email + Push',
@@ -110,6 +117,19 @@ export default function NotificationTemplates() {
           <Plus className="w-4 h-4" />
           Nueva plantilla
         </button>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por nombre, título o contenido..."
+            className="w-full pl-10 pr-4 py-2 border rounded-lg"
+          />
+        </div>
       </div>
 
       {showForm && (
@@ -228,7 +248,7 @@ export default function NotificationTemplates() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {templates.map((t) => (
+            {filteredTemplates.map((t) => (
               <tr key={t.id}>
                 <td className="px-6 py-4 font-medium text-gray-900">{t.name}</td>
                 <td className="px-6 py-4 text-gray-500 text-sm">{t.title_template}</td>
@@ -257,7 +277,7 @@ export default function NotificationTemplates() {
       </div>
 
       <div className="md:hidden space-y-3">
-        {templates.map((t) => (
+        {filteredTemplates.map((t) => (
           <div key={t.id} className="bg-white rounded-xl shadow-sm p-4">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
