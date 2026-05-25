@@ -17,6 +17,7 @@ import { Color } from '@tiptap/extension-color'
 import { TextStyle } from '@tiptap/extension-text-style'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import { createClient } from '@/lib/supabase/client'
 import {
   Bold,
   Italic,
@@ -66,11 +67,44 @@ const TEXT_COLORS = [
 
 
 
+async function uploadImageToSupabase(file: File | Blob, filename: string): Promise<string | null> {
+  try {
+    const supabase = createClient()
+    const fileExt = file.type.split('/')[1] || 'jpg'
+    const uniqueName = `${filename}_${Date.now()}.${fileExt}`
+    const { data, error } = await supabase.storage
+      .from('news-images')
+      .upload(uniqueName, file, { contentType: file.type })
+    if (error) {
+      console.error('Error uploading image:', error)
+      return null
+    }
+    const { data: urlData } = supabase.storage.from('news-images').getPublicUrl(data.path)
+    return urlData.publicUrl
+  } catch (err) {
+    console.error('Error uploading image:', err)
+    return null
+  }
+}
+
+async function fetchAndUploadImage(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url)
+    const blob = await response.blob()
+    const filename = url.split('/').pop()?.split('?')[0] || 'image'
+    return await uploadImageToSupabase(blob, filename)
+  } catch (err) {
+    console.error('Error fetching and uploading image:', err)
+    return null
+  }
+}
+
 export default function MarkdownEditor({ value, onChange, height = 400 }: MarkdownEditorProps) {
   const [showHtml, setShowHtml] = useState(false)
   const [htmlValue, setHtmlValue] = useState('')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showColor, setShowColor] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
   const editor = useEditor({
     extensions: [
@@ -127,6 +161,79 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
         class: 'prose prose-sm sm:prose-base lg:prose-lg max-w-none focus:outline-none min-h-[100px] p-4',
         style: `min-height: ${typeof height === 'number' ? `${height}px` : height}`,
       },
+      handleDrop: async (view, event, slice, moved) => {
+        if (!editor) return false
+        if (!moved && event.dataTransfer?.files) {
+          const files = event.dataTransfer.files
+          if (files.length > 0) {
+            const file = files[0]
+            if (file.type.startsWith('image/')) {
+              setIsUploading(true)
+              const url = await uploadImageToSupabase(file, 'editor')
+              setIsUploading(false)
+              if (url) {
+                editor.chain().focus().setImage({ src: url }).run()
+                return true
+              }
+            }
+          }
+        }
+        if (event.dataTransfer?.getData('text/uri-list')) {
+          const uri = event.dataTransfer.getData('text/uri-list')
+          if (uri.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i)) {
+            setIsUploading(true)
+            const url = await fetchAndUploadImage(uri)
+            setIsUploading(false)
+            if (url) {
+              editor.chain().focus().setImage({ src: url }).run()
+            } else {
+              editor.chain().focus().setImage({ src: uri }).run()
+            }
+            return true
+          }
+        }
+        return false
+      },
+      handlePaste: async (view, event) => {
+        if (!editor) return false
+        const items = event.clipboardData?.items
+        if (!items) return false
+        for (const item of items) {
+          if (item.type.startsWith('image/')) {
+            const file = item.getAsFile()
+            if (file) {
+              setIsUploading(true)
+              const url = await uploadImageToSupabase(file, 'editor')
+              setIsUploading(false)
+              if (url) {
+                editor.chain().focus().setImage({ src: url }).run()
+                return true
+              }
+            }
+          }
+        }
+        const html = event.clipboardData?.getData('text/html')
+        if (html) {
+          const parser = new DOMParser()
+          const doc = parser.parseFromString(html, 'text/html')
+          const imgs = doc.querySelectorAll('img')
+          if (imgs.length > 0) {
+            setIsUploading(true)
+            for (const img of imgs) {
+              const src = img.getAttribute('src')
+              if (src && (src.startsWith('http://') || src.startsWith('https://'))) {
+                const url = await fetchAndUploadImage(src)
+                if (url) {
+                  editor.chain().focus().setImage({ src }).run()
+                }
+              }
+            }
+            setIsUploading(false)
+            return true
+          }
+        }
+        return false
+      },
     },
   })
 
@@ -163,8 +270,8 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
   const addImage = useCallback(() => {
     if (!editor) return
     const url = window.prompt('URL de la imagen')
-    if (url) {
-      editor.chain().focus().setImage({ src: url }).run()
+    if (url && url.trim()) {
+      editor.chain().focus().setImage({ src: url.trim() }).run()
     }
   }, [editor])
 
@@ -400,12 +507,36 @@ const getIsActiveAlign = (align: string): boolean => {
           style={{ minHeight: typeof height === 'number' ? `${height}px` : height }}
         />
       ) : (
-        <EditorContent editor={editor} />
+        <div className="relative">
+          <EditorContent editor={editor} />
+          {isUploading && (
+            <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center">
+              <div className="flex flex-col items-center gap-2">
+                <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-sm text-gray-600">Subiendo imagen...</span>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {!showHtml && (
         <div className="flex justify-between items-center px-3 py-1 bg-gray-50 border-t text-xs text-gray-500">
-          <span>{wordCount} palabras</span>
+          <div className="flex items-center gap-2">
+            <span>{wordCount} palabras</span>
+            {isUploading && (
+              <span className="flex items-center gap-1 text-blue-600">
+                <svg className="animate-spin h-3 w-3" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                Subiendo imagen...
+              </span>
+            )}
+          </div>
           {isFullscreen && (
             <button
               type="button"
