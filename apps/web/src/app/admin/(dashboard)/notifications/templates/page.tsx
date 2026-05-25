@@ -176,12 +176,32 @@ export default function NotificationTemplates() {
           </div>
 
           <div className="bg-blue-50 rounded-lg p-4 text-sm">
-            <p className="font-medium text-blue-900 mb-2">Variables disponibles:</p>
-            <div className="flex flex-wrap gap-2">
-              <code className="bg-blue-100 px-2 py-1 rounded text-xs">{'{title}'}</code>
-              <code className="bg-blue-100 px-2 py-1 rounded text-xs">{'{summary}'}</code>
-              <code className="bg-blue-100 px-2 py-1 rounded text-xs">{'{body}'}</code>
-              <code className="bg-blue-100 px-2 py-1 rounded text-xs">{'{url}'}</code>
+            <p className="font-medium text-blue-900 mb-3">Variables disponibles:</p>
+            <div className="space-y-2">
+              <div className="flex items-start gap-2">
+                <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">{'{title}'}</code>
+                <span className="text-blue-800">- Título de la noticia</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">{'{summary}'}</code>
+                <span className="text-blue-800">- Resumen breve de la noticia</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">{'{body}'}</code>
+                <span className="text-blue-800">- Contenido principal de la noticia</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">{'{url}'}</code>
+                <span className="text-blue-800">- Enlace directo a la noticia</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">{'{category}'}</code>
+                <span className="text-blue-800">- Categorías de la noticia (separadas por coma)</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">{'{date}'}</code>
+                <span className="text-blue-800">- Fecha de publicación</span>
+              </div>
             </div>
           </div>
 
