@@ -60,8 +60,8 @@ export default function AdminPeople() {
         doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 30)
         // @ts-expect-error - autoTable is added by jspdf-autotable plugin
         doc.autoTable({
-          head: [['Nombre', 'Identidad', 'Email', 'Teléfono', 'Notificaciones']],
-          body: filteredPeople.map((p) => [`${p.first_name} ${p.last_name}`, p.identity_doc, p.email, p.phone, p.notifications_email ? 'Sí' : 'No']),
+          head: [['Nombre', 'Apellido', 'Identidad', 'Email', 'Teléfono', 'Notificaciones']],
+          body: filteredPeople.map((p) => [p.first_name, p.last_name, p.identity_doc, p.email, p.phone, p.notifications_email ? 'Sí' : 'No']),
           startY: 40,
         })
         doc.save(`people-${new Date().toISOString().split('T')[0]}.pdf`)

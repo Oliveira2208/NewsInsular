@@ -44,7 +44,8 @@ export interface NewsCategory {
 
 export interface Person {
   id: number
-  full_name: string
+  first_name: string
+  last_name: string
   identity_doc: string
   birth_date: string
   phone: string
@@ -56,6 +57,7 @@ export interface Person {
   address: string
   push_token: string | null
   notifications_email: boolean
+  unsubscribe_token: string | null
   created_at: string
   deleted_at: string | null
 }

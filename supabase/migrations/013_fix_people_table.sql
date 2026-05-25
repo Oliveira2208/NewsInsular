@@ -11,7 +11,8 @@ DROP TABLE IF EXISTS people CASCADE;
 -- Step 2: Recreate with new structure
 CREATE TABLE people (
   id SERIAL PRIMARY KEY,
-  full_name TEXT NOT NULL,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
   identity_doc TEXT UNIQUE NOT NULL,
   birth_date DATE NOT NULL,
   phone TEXT NOT NULL,

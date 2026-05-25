@@ -26,7 +26,7 @@ export default function UnsubscribePage({ searchParams }: UnsubscribePageProps) 
 
       const { data: person, error } = await supabase
         .from('people')
-        .select('id, full_name, email')
+        .select('id, first_name, last_name, email')
         .eq('unsubscribe_token', token)
         .single()
 

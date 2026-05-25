@@ -8,7 +8,8 @@ import { createClient } from '@/lib/supabase/client'
 import { requestNotificationPermission } from '@/lib/firebase'
 
 const registerSchema = z.object({
-  full_name: z.string().min(2, 'El nombre no puede estar vacío'),
+  first_name: z.string().min(2, 'El nombre no puede estar vacío'),
+  last_name: z.string().min(2, 'El apellido no puede estar vacío'),
   identity_prefix: z.enum(['V', 'E', 'P']),
   identity_number: z.string().regex(/^\d{7,8}$/, 'La cédula debe tener 7-8 dígitos'),
   birth_date: z.string().min(1, 'La fecha de nacimiento es requerida'),
@@ -71,7 +72,8 @@ export default function RegisterPage() {
   const [touched, setTouched] = useState<Partial<Record<FieldName, boolean>>>({})
   const [errors, setErrors] = useState<Partial<Record<FieldName, string>>>({})
   const [form, setForm] = useState<RegisterFormData>({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     identity_prefix: 'V',
     identity_number: '',
     birth_date: '',
@@ -169,7 +171,7 @@ export default function RegisterPage() {
       setErrors(fieldErrors)
       
       const allTouched: Partial<Record<FieldName, boolean>> = {}
-      const allFields: FieldName[] = ['full_name', 'identity_prefix', 'identity_number', 'birth_date', 'phone', 'email', 'state_id', 'municipality_id', 'parish_id', 'commune_id', 'address']
+      const allFields: FieldName[] = ['first_name', 'last_name', 'identity_prefix', 'identity_number', 'birth_date', 'phone', 'email', 'state_id', 'municipality_id', 'parish_id', 'commune_id', 'address']
       allFields.forEach(f => { allTouched[f] = true })
       setTouched(allTouched)
       
@@ -189,7 +191,8 @@ export default function RegisterPage() {
 
     const insertData = {
       identity_doc,
-      full_name: form.full_name,
+      first_name: form.first_name,
+      last_name: form.last_name,
       birth_date: form.birth_date,
       phone: form.phone,
       email: form.email,
@@ -242,7 +245,7 @@ export default function RegisterPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               email: form.email,
-              full_name: form.full_name,
+              fullName: `${form.first_name} ${form.last_name}`,
               unsubscribe_token: data.unsubscribe_token,
             }),
           })
@@ -288,18 +291,35 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nombre completo
+            Nombre
           </label>
           <input
             type="text"
-            value={form.full_name}
-            onChange={(e) => handleChange('full_name', e.target.value)}
-            onBlur={(e) => handleBlur('full_name', e.target.value)}
-            className={getFieldClass('full_name')}
-            placeholder="Juan Pérez"
+            value={form.first_name}
+            onChange={(e) => handleChange('first_name', e.target.value)}
+            onBlur={(e) => handleBlur('first_name', e.target.value)}
+            className={getFieldClass('first_name')}
+            placeholder="Juan"
           />
-          {touched.full_name && errors.full_name && (
-            <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>
+          {touched.first_name && errors.first_name && (
+            <p className="text-red-500 text-sm mt-1">{errors.first_name}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Apellido
+          </label>
+          <input
+            type="text"
+            value={form.last_name}
+            onChange={(e) => handleChange('last_name', e.target.value)}
+            onBlur={(e) => handleBlur('last_name', e.target.value)}
+            className={getFieldClass('last_name')}
+            placeholder="Pérez"
+          />
+          {touched.last_name && errors.last_name && (
+            <p className="text-red-500 text-sm mt-1">{errors.last_name}</p>
           )}
         </div>
 
