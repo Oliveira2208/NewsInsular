@@ -50,7 +50,7 @@ export default function AdminNews() {
       .then(({ data }) => {
         const newsWithCats = data?.map(n => ({
           ...n,
-          categories: n.categories?.map((nc: { categories: { name: string } }) => nc.categories) ?? [],
+          categories: n.categories?.map((nc: any) => nc.categories?.name) ?? [],
         }))
         setNews(newsWithCats ?? [])
         setLoading(false)
@@ -65,7 +65,7 @@ export default function AdminNews() {
       .order('created_at', { ascending: false })
     const newsWithCats = data?.map(n => ({
       ...n,
-      categories: n.categories?.map((nc: { categories: { name: string } }) => nc.categories) ?? [],
+      categories: n.categories?.map((nc: any) => nc.categories?.name) ?? [],
     }))
     setNews(newsWithCats ?? [])
     setLoading(false)
@@ -73,7 +73,7 @@ export default function AdminNews() {
 
   const filteredNews = news.filter((n) =>
     n.title?.toLowerCase().includes(search.toLowerCase()) ||
-    n.categories?.some((c: any) => c.categories?.name?.toLowerCase().includes(search.toLowerCase()))
+    n.categories?.some((c: any) => c?.toLowerCase().includes(search.toLowerCase()))
   )
 
   const deleteNews = useCallback(async (id: string, isPublished: boolean) => {
@@ -133,7 +133,7 @@ export default function AdminNews() {
                   <p className="font-medium text-gray-900">{n.title}</p>
                 </td>
                 <td className="px-6 py-4 text-gray-600">
-{n.categories?.map(c => c.categories?.name).filter(Boolean).join(', ') || '-'}
+                  {n.categories?.join(', ') || '-'}
                 </td>
                 <td className="px-6 py-4">
                   {getStatusBadge(n)}
@@ -172,7 +172,7 @@ export default function AdminNews() {
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 truncate">{n.title}</p>
-                <p className="text-sm text-gray-500 mt-1">{n.categories?.map(c => c.categories?.name).filter(Boolean).join(', ') || '-'}</p>
+                <p className="text-sm text-gray-500 mt-1">{n.categories?.join(', ') || '-'}</p>
               </div>
               <div className="flex gap-2">
                 <Link
