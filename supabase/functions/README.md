@@ -17,6 +17,7 @@ supabase secrets set NEXT_PUBLIC_APP_URL=https://your-domain.com
 supabase functions deploy send-welcome-email
 supabase functions deploy notify-new-news
 supabase functions deploy send-weekly-digest
+supabase functions deploy send-custom-email
 ```
 
 ## Function URLs
@@ -24,6 +25,7 @@ supabase functions deploy send-weekly-digest
 - `https://your-project.supabase.co/functions/v1/send-welcome-email`
 - `https://your-project.supabase.co/functions/v1/notify-new-news`
 - `https://your-project.supabase.co/functions/v1/send-weekly-digest`
+- `https://your-project.supabase.co/functions/v1/send-custom-email`
 
 ## Cron Job (optional - for weekly digest)
 

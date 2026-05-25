@@ -3,15 +3,24 @@ import { Resend } from 'resend'
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
-interface WelcomeEmailData {
-  email: string
-  fullName: string
-}
+Deno.serve(async (req) => {
+  try {
+    const { email, fullName, unsubscribe_token } = await req.json()
 
-export async function sendWelcomeEmail(data: WelcomeEmailData) {
-  const { email, fullName } = data
+    if (!email || !fullName) {
+      return new Response(
+        JSON.stringify({ error: 'Email and fullName are required' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
 
-  const html = `
+    const appUrl = Deno.env.get('NEXT_PUBLIC_APP_URL') || 'http://localhost:3000'
+
+    const unsubscribeLink = unsubscribe_token 
+      ? `${appUrl}/unsubscribe?token=${unsubscribe_token}`
+      : null
+
+    const html = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -40,9 +49,22 @@ export async function sendWelcomeEmail(data: WelcomeEmailData) {
       </ul>
     </div>
     
-    <a href="${Deno.env.get('NEXT_PUBLIC_APP_URL')}" style="display: inline-block; background-color: #1a56db; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px;">
+    <a href="${appUrl}" style="display: inline-block; background-color: #1a56db; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; margin-top: 20px;">
       Ver noticias
     </a>
+    
+    ${unsubscribeLink ? `
+    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+      <p style="color: #666; font-size: 12px; text-align: center; margin-bottom: 10px;">
+        ¿No deseas recibir estas notificaciones?
+      </p>
+      <p style="color: #666; font-size: 12px; text-align: center;">
+        <a href="${unsubscribeLink}" style="color: #1a56db; text-decoration: underline;">
+          Cancela tu suscripción
+        </a>
+      </p>
+    </div>
+    ` : ''}
     
     <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;">
     
@@ -52,14 +74,23 @@ export async function sendWelcomeEmail(data: WelcomeEmailData) {
   </div>
 </body>
 </html>
-  `
+    `
 
-  const result = await resend.emails.send({
-    from: 'NewsInsular <noreply@newsinsular.com>',
-    to: email,
-    subject: '¡Bienvenido a NewsInsular!',
-    html,
-  })
+    const result = await resend.emails.send({
+      from: 'NewsInsular <noreply@newsinsular.com>',
+      to: email,
+      subject: '¡Bienvenido a NewsInsular!',
+      html,
+    })
 
-  return result
-}
+    return new Response(JSON.stringify(result), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  } catch (error) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+})

@@ -20,7 +20,9 @@ export async function notifyNewNews(data: NotifyNewNewsData) {
 
   const { data: people } = await supabase
     .from('people')
-    .select('id, email, push_token')
+    .select('id, email, unsubscribe_token')
+    .eq('notifications_email', true)
+    .is('deleted_at', null)
 
   if (!people || people.length === 0) {
     return { success: true, message: 'No recipients' }
@@ -28,7 +30,26 @@ export async function notifyNewNews(data: NotifyNewNewsData) {
 
   const appUrl = Deno.env.get('NEXT_PUBLIC_APP_URL')
 
-  const html = `
+  const emailAddresses = people.map((p: any) => p.email).filter(Boolean)
+
+  if (emailAddresses.length > 0) {
+    const unsubscribeHtml = `
+      <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e5e5;">
+        <p style="color: #666; font-size: 12px; text-align: center; margin-bottom: 10px;">
+          ¿No deseas recibir estas notificaciones?
+        </p>
+        <p style="color: #666; font-size: 12px; text-align: center;">
+          <a href="${appUrl}/unsubscribe?token={unsubscribe_token}" style="color: #1a56db; text-decoration: underline;">
+            Cancela tu suscripción
+          </a>
+        </p>
+      </div>
+    `
+
+    for (const person of people) {
+      const personalizedHtml = unsubscribeHtml.replace('{unsubscribe_token}', person.unsubscribe_token)
+
+      const html = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -48,52 +69,32 @@ export async function notifyNewNews(data: NotifyNewNewsData) {
       Leer noticia completa
     </a>
     
-    <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 30px 0;">
+    ${personalizedHtml}
     
-    <p style="color: #666; font-size: 12px; text-align: center;">
-      © 2026 NewsInsular. Si no deseas recibir estas notificaciones, responde a este correo.
+    <p style="color: #666; font-size: 12px; text-align: center; margin-top: 20px;">
+      © 2026 NewsInsular. Todos los derechos reservados.
     </p>
   </div>
 </body>
 </html>
-  `
+      `
 
-  const emailAddresses = people.map((p: any) => p.email).filter(Boolean)
-
-  if (emailAddresses.length > 0) {
-    await resend.emails.send({
-      from: 'NewsInsular <noreply@newsinsular.com>',
-      to: emailAddresses,
-      subject: title,
-      html,
-    })
-  }
-
-  for (const person of people) {
-    if (person.push_token) {
-      try {
-        await fetch('https://exp.host/--/api/v2/push/send', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: person.push_token,
-            title,
-            body: summary?.slice(0, 100) || '',
-            data: { newsId },
-          }),
-        })
-      } catch (err) {
-        console.error('Push notification failed:', err)
-      }
+      await resend.emails.send({
+        from: 'NewsInsular <noreply@newsinsular.com>',
+        to: [person.email],
+        subject: title,
+        html,
+      })
     }
-
-    await supabase.from('notifications').insert({
-      person_id: person.id,
-      news_id: newsId,
-      title,
-      body: summary,
-    })
   }
+
+  await supabase.from('notification_history').insert({
+    news_id: newsId,
+    title,
+    body: summary,
+    notification_type: 'email_only',
+    recipients_count: people.length,
+  })
 
   return { success: true, recipients: people.length }
 }

@@ -44,19 +44,20 @@ export interface NewsCategory {
 
 export interface Person {
   id: number
+  full_name: string
   identity_doc: string
-  first_name: string
-  last_name: string
-  phone: string | null
+  birth_date: string
+  phone: string
   email: string
-  birth_date: string | null
-  state_id: number | null
-  municipality_id: number | null
-  parish_id: number | null
-  commune_id: number | null
+  state_id: number
+  municipality_id: number
+  parish_id: number
+  commune_id: number
+  address: string
+  push_token: string | null
   notifications_email: boolean
-  fcm_token: string | null
   created_at: string
+  deleted_at: string | null
 }
 
 export interface Notification {

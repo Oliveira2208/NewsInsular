@@ -187,11 +187,6 @@ export default function RegisterPage() {
     const supabase = createClient()
     const identity_doc = formatIdentityDoc(form.identity_prefix, form.identity_number)
 
-    const stateName = states.find(s => s.id === form.state_id)?.name || ''
-    const municipalityName = municipalities.find(m => m.id === form.municipality_id)?.name || ''
-    const parishName = parishes.find(p => p.id === form.parish_id)?.name || ''
-    const communeName = communes.find(c => c.id === form.commune_id)?.name || ''
-
     const { data, error } = await supabase
       .from('people')
       .insert({
@@ -200,17 +195,18 @@ export default function RegisterPage() {
         birth_date: form.birth_date,
         phone: form.phone,
         email: form.email,
-        state: stateName,
-        municipality: municipalityName,
-        parish: parishName,
-        commune: communeName,
+        state_id: form.state_id,
+        municipality_id: form.municipality_id,
+        parish_id: form.parish_id,
+        commune_id: form.commune_id,
         address: form.address,
+        notifications_email: form.notifications_email,
       })
       .select()
       .single()
 
     if (error) {
-      if (error.message.includes('unique') || error.code === '23505') {
+      if (error.code === '23505') {
         if (error.message.includes('identity_doc')) {
           setErrors({ identity_number: 'Esta cédula ya está registrada' })
           setTouched(prev => ({ ...prev, identity_number: true }))
@@ -223,17 +219,35 @@ export default function RegisterPage() {
       return
     }
 
-    if (data && 'Notification' in window && Notification.permission === 'granted') {
-      try {
-        const fcmToken = await requestNotificationPermission()
-        if (fcmToken) {
-          await supabase
-            .from('people')
-            .update({ push_token: fcmToken })
-            .eq('id', data.id)
+    if (data) {
+      if (form.notifications_email) {
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-welcome-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: form.email,
+              full_name: form.full_name,
+              unsubscribe_token: data.unsubscribe_token,
+            }),
+          })
+        } catch (err) {
+          console.error('Welcome email error:', err)
         }
-      } catch (err) {
-        console.error('FCM token error:', err)
+      }
+
+      if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          const fcmToken = await requestNotificationPermission()
+          if (fcmToken) {
+            await supabase
+              .from('people')
+              .update({ push_token: fcmToken })
+              .eq('id', data.id)
+          }
+        } catch (err) {
+          console.error('FCM token error:', err)
+        }
       }
     }
 
