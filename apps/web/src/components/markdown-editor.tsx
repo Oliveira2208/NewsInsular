@@ -105,6 +105,7 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [showColor, setShowColor] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadingSrc, setUploadingSrc] = useState<string | null>(null)
 
   const editor = useEditor({
     extensions: [
@@ -161,20 +162,22 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
         class: 'prose prose-sm sm:prose-base lg:prose-lg max-w-none focus:outline-none min-h-[100px] p-4',
         style: `min-height: ${typeof height === 'number' ? `${height}px` : height}`,
       },
-      handleDrop: async (view, event, slice, moved) => {
+      handleDrop: (view, event, slice, moved) => {
         if (!editor) return false
         if (!moved && event.dataTransfer?.files) {
           const files = event.dataTransfer.files
           if (files.length > 0) {
             const file = files[0]
             if (file.type.startsWith('image/')) {
+              const blobUrl = URL.createObjectURL(file)
               setIsUploading(true)
-              const url = await uploadImageToSupabase(file, 'editor')
-              setIsUploading(false)
-              if (url) {
-                editor.chain().focus().setImage({ src: url }).run()
-                return true
-              }
+              uploadImageToSupabase(file, 'editor').then((url) => {
+                setIsUploading(false)
+                if (url) {
+                  editor?.chain().focus().setImage({ src: url }).run()
+                }
+              })
+              return true
             }
           }
         }
@@ -182,19 +185,20 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
           const uri = event.dataTransfer.getData('text/uri-list')
           if (uri.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i)) {
             setIsUploading(true)
-            const url = await fetchAndUploadImage(uri)
-            setIsUploading(false)
-            if (url) {
-              editor.chain().focus().setImage({ src: url }).run()
-            } else {
-              editor.chain().focus().setImage({ src: uri }).run()
-            }
+            setUploadingSrc(uri)
+            fetchAndUploadImage(uri).then((url) => {
+              setIsUploading(false)
+              setUploadingSrc(null)
+              if (url && editor) {
+                editor.chain().focus().setImage({ src: url }).run()
+              }
+            })
             return true
           }
         }
         return false
       },
-      handlePaste: async (view, event) => {
+      handlePaste: (view, event) => {
         if (!editor) return false
         const items = event.clipboardData?.items
         if (!items) return false
@@ -203,12 +207,13 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
             const file = item.getAsFile()
             if (file) {
               setIsUploading(true)
-              const url = await uploadImageToSupabase(file, 'editor')
-              setIsUploading(false)
-              if (url) {
-                editor.chain().focus().setImage({ src: url }).run()
-                return true
-              }
+              uploadImageToSupabase(file, 'editor').then((url) => {
+                setIsUploading(false)
+                if (url) {
+                  editor?.chain().focus().setImage({ src: url }).run()
+                }
+              })
+              return true
             }
           }
         }
@@ -219,16 +224,21 @@ export default function MarkdownEditor({ value, onChange, height = 400 }: Markdo
           const imgs = doc.querySelectorAll('img')
           if (imgs.length > 0) {
             setIsUploading(true)
+            const srcs: string[] = []
             for (const img of imgs) {
               const src = img.getAttribute('src')
               if (src && (src.startsWith('http://') || src.startsWith('https://'))) {
-                const url = await fetchAndUploadImage(src)
-                if (url) {
-                  editor.chain().focus().setImage({ src }).run()
-                }
+                srcs.push(src)
               }
             }
-            setIsUploading(false)
+            Promise.all(srcs.map(fetchAndUploadImage)).then((urls) => {
+              setIsUploading(false)
+              urls.forEach((url, i) => {
+                if (url && editor) {
+                  editor.chain().focus().setImage({ src: url }).run()
+                }
+              })
+            })
             return true
           }
         }
@@ -510,13 +520,16 @@ const getIsActiveAlign = (align: string): boolean => {
         <div className="relative">
           <EditorContent editor={editor} />
           {isUploading && (
-            <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center">
+            <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-10">
               <div className="flex flex-col items-center gap-2">
                 <svg className="animate-spin h-8 w-8 text-blue-600" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
                 <span className="text-sm text-gray-600">Subiendo imagen...</span>
+                {uploadingSrc && uploadingSrc.startsWith('http') && (
+                  <span className="text-xs text-gray-400 max-w-[200px] truncate">{uploadingSrc}</span>
+                )}
               </div>
             </div>
           )}
@@ -524,7 +537,7 @@ const getIsActiveAlign = (align: string): boolean => {
       )}
 
       {!showHtml && (
-        <div className="flex justify-between items-center px-3 py-1 bg-gray-50 border-t text-xs text-gray-500">
+        <div className="flex justify-between items-center px-3 py-1 bg-gray-50 border-t text-xs text-gray-500 z-10 relative">
           <div className="flex items-center gap-2">
             <span>{wordCount} palabras</span>
             {isUploading && (

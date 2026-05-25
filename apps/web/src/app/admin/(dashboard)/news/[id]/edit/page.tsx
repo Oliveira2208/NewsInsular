@@ -31,6 +31,7 @@ export default function EditNews({ params }: { params: { id: string } }) {
   const [deletingImages, setDeletingImages] = useState<string[]>([])
   const [showPreview, setShowPreview] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
+  const [uploadingFromUrl, setUploadingFromUrl] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -113,14 +114,40 @@ export default function EditNews({ params }: { params: { id: string } }) {
     setIsDragging(false)
   }, [])
 
-  const handleDrop = useCallback((e: DragEvent) => {
+  const handleDrop = useCallback(async (e: DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
-    if (files.length > 0) {
-      const newImages = [...images, ...files]
-      setImages(newImages)
-      const newPreviews = newImages.map(f => URL.createObjectURL(f))
+    const urlFiles: File[] = []
+    
+    const uriList = e.dataTransfer.getData('text/uri-list')
+    if (uriList) {
+      const urls = uriList.split('\n').filter(url => 
+        url.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i)
+      )
+      for (const url of urls) {
+        const trimmedUrl = url.trim()
+        if (trimmedUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i)) {
+          setUploadingFromUrl(true)
+          try {
+            const response = await fetch(trimmedUrl)
+            const blob = await response.blob()
+            const ext = trimmedUrl.split('.').pop()?.split('?')[0] || 'jpg'
+            const filename = `image_${Date.now()}.${ext}`
+            const file = new File([blob], filename, { type: `image/${ext}` })
+            urlFiles.push(file)
+          } catch (err) {
+            console.error('Error uploading image from URL:', err)
+          }
+          setUploadingFromUrl(false)
+        }
+      }
+    }
+    
+    if (files.length > 0 || urlFiles.length > 0) {
+      const allNewImages = [...images, ...files, ...urlFiles]
+      setImages(allNewImages)
+      const newPreviews = allNewImages.map(f => URL.createObjectURL(f))
       setImagePreviews(newPreviews)
     }
   }, [images])
@@ -384,11 +411,23 @@ export default function EditNews({ params }: { params: { id: string } }) {
               id="image-upload-edit"
             />
             <label htmlFor="image-upload-edit" className="cursor-pointer">
-              <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-              <p className="text-sm text-gray-600">
-                Arrastra imágenes aquí o <span className="text-primary font-medium">haz clic para seleccionar</span>
-              </p>
-              <p className="text-xs text-gray-500 mt-1">PNG, JPG hasta 10MB</p>
+              {uploadingFromUrl ? (
+                <>
+                  <svg className="animate-spin h-8 w-8 mx-auto text-blue-600 mb-2" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  <p className="text-sm text-blue-600">Subiendo imagen desde URL...</p>
+                </>
+              ) : (
+                <>
+                  <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600">
+                    Arrastra imágenes aquí o <span className="text-primary font-medium">haz clic para seleccionar</span>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">PNG, JPG hasta 10MB o arrastra desde internet</p>
+                </>
+              )}
             </label>
           </div>
 
