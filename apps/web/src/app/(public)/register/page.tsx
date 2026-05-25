@@ -8,12 +8,12 @@ import { createClient } from '@/lib/supabase/client'
 import { requestNotificationPermission } from '@/lib/firebase'
 
 const registerSchema = z.object({
-  full_name: z.string().min(2, 'Name required'),
+  full_name: z.string().min(2, 'El nombre es requerido'),
   identity_prefix: z.enum(['V', 'E', 'P']),
-  identity_number: z.string().regex(/^\d{6,9}$/, 'Invalid document (6-9 digits)'),
-  birth_date: z.string().min(1, 'Birth date required'),
-  phone: z.string().min(10, 'Invalid phone'),
-  email: z.string().email('Invalid email'),
+  identity_number: z.string().regex(/^\d{7,8}$/, 'La cédula debe tener 7-8 dígitos'),
+  birth_date: z.string().min(1, 'La fecha de nacimiento es requerida'),
+  phone: z.string().regex(/^04(12|14|16|22|24|26)-\d{7}$/, 'Formato inválido. Use: 0412-1234567'),
+  email: z.string().email('Email inválido'),
   notifications_email: z.boolean(),
 })
 
@@ -71,7 +71,7 @@ export default function RegisterPage() {
 
     if (error) {
       if (error.message.includes('unique')) {
-        setErrors({ email: 'This email is already registered' })
+        setErrors({ email: 'Este email ya está registrado' })
       }
       setLoading(false)
       return
@@ -102,27 +102,27 @@ export default function RegisterPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">Register</h1>
-      <p className="text-gray-600 mb-8">Fill out the form to register</p>
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">Registro</h1>
+      <p className="text-gray-600 mb-8">Completa el formulario para registrarte</p>
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-xl shadow-sm">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Full name
+            Nombre completo
           </label>
           <input
             type="text"
             value={form.full_name}
             onChange={(e) => handleChange('full_name', e.target.value)}
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-            placeholder="John Doe"
+            placeholder="Juan Pérez"
           />
           {errors.full_name && <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Identity document
+            Cédula de identidad
           </label>
           <div className="flex gap-2">
             <select
@@ -139,7 +139,7 @@ export default function RegisterPage() {
               value={form.identity_number}
               onChange={(e) => handleChange('identity_number', e.target.value)}
               className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary"
-              placeholder="123456789"
+              placeholder="12345678"
             />
           </div>
           {errors.identity_number && <p className="text-red-500 text-sm mt-1">{errors.identity_number}</p>}
@@ -147,7 +147,7 @@ export default function RegisterPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Birth date
+            Fecha de nacimiento
           </label>
           <input
             type="date"
@@ -159,7 +159,7 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
           <input
             type="tel"
             value={form.phone}
@@ -171,13 +171,13 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico</label>
           <input
             type="email"
             value={form.email}
             onChange={(e) => handleChange('email', e.target.value)}
             className="w-full px-4 py-2 border rounded-lg"
-            placeholder="email@example.com"
+            placeholder="correo@ejemplo.com"
           />
           {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
         </div>
@@ -191,7 +191,7 @@ export default function RegisterPage() {
             className="mt-1 w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
           />
           <label htmlFor="notifications_email" className="text-sm text-gray-700">
-            I want to receive notifications of new articles by email
+            Deseo recibir notificaciones de nuevas noticias por correo electrónico
           </label>
         </div>
 
@@ -200,7 +200,7 @@ export default function RegisterPage() {
           disabled={loading}
           className="w-full py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50"
         >
-          {loading ? 'Registering...' : 'Register'}
+          {loading ? 'Registrando...' : 'Registrarse'}
         </button>
       </form>
     </div>
