@@ -36,15 +36,24 @@ export default function NewsDetail({ news }: NewsDetailProps) {
     }
   }
 
+  type CategoryItem = { name?: string; categories?: { name?: string } }
+
+  const getCategoryName = (cat: CategoryItem): string | null => {
+    return cat.categories?.name || cat.name || null
+  }
+
   return (
     <article className="max-w-4xl mx-auto px-4 py-8">
       {categories.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {categories.map((cat, index) => (
-            <span key={index} className="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
-              {cat.name}
-            </span>
-          ))}
+          {categories.map((cat, index) => {
+            const catName = getCategoryName(cat as CategoryItem)
+            return catName ? (
+              <span key={index} className="inline-block px-3 py-1 text-sm font-medium bg-blue-100 text-blue-800 rounded-full">
+                {catName}
+              </span>
+            ) : null
+          })}
         </div>
       )}
 

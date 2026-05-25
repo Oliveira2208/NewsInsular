@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/client'
 import { requestNotificationPermission } from '@/lib/firebase'
 
 const registerSchema = z.object({
-  full_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
+  full_name: z.string().min(2, 'El nombre no puede estar vacío'),
   identity_prefix: z.enum(['V', 'E', 'P']),
   identity_number: z.string().regex(/^\d{7,8}$/, 'La cédula debe tener 7-8 dígitos'),
   birth_date: z.string().min(1, 'La fecha de nacimiento es requerida'),

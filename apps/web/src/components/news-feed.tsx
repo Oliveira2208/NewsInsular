@@ -224,11 +224,14 @@ function NewsCard({ news }: { news: News }) {
         <div className="p-4 flex flex-col flex-grow">
           {news.categories && news.categories.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
-              {news.categories.map((cat, idx) => (
-                <span key={idx} className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                  {cat.name}
-                </span>
-              ))}
+              {news.categories.map((cat, idx) => {
+                const catName = cat.categories?.name
+                return catName ? (
+                  <span key={idx} className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                    {catName}
+                  </span>
+                ) : null
+              })}
             </div>
           )}
           <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">

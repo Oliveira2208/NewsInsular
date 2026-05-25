@@ -18,7 +18,13 @@ export interface News {
   created_at: string
   updated_at: string
   author_id: string | null
-  categories?: Category[]
+  categories?: {
+    categories: {
+      id: string
+      name: string
+      slug: string
+    }
+  }[]
   images?: NewsImage[]
 }
 

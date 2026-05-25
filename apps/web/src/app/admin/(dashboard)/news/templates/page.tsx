@@ -254,7 +254,7 @@ export default function NewsTemplates() {
             {templates.map((t) => (
               <tr key={t.id}>
                 <td className="px-6 py-4 font-medium text-gray-900">{t.name}</td>
-                <td className="px-6 py-4 text-gray-500">{t.categories?.map(c => c.name).join(', ') || '-'}</td>
+                <td className="px-6 py-4 text-gray-500">{t.categories?.map(c => c.name).filter(Boolean).join(', ') || '-'}</td>
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 text-xs rounded-full ${t.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
                     {t.is_active ? 'Activa' : 'Inactiva'}
@@ -280,7 +280,7 @@ export default function NewsTemplates() {
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900">{t.name}</p>
-                <p className="text-sm text-gray-500">{t.categories?.map(c => c.name).join(', ') || 'Sin categorías'}</p>
+                <p className="text-sm text-gray-500">{t.categories?.map(c => c.name).filter(Boolean).join(', ') || 'Sin categorías'}</p>
               </div>
               <div className="flex gap-1">
                 <button onClick={() => handleEdit(t)} className="p-2 text-gray-500 hover:text-primary">
