@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, use } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { News, Category } from '@/lib/types'
@@ -8,8 +8,8 @@ import MarkdownEditor from '@/components/markdown-editor'
 
 type PublishMode = 'draft' | 'now' | 'scheduled'
 
-export default function EditNews({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
+export default function EditNews({ params }: { params: { id: string } }) {
+  const { id } = params
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
