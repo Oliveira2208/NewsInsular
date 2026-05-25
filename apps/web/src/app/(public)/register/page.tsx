@@ -187,25 +187,32 @@ export default function RegisterPage() {
     const supabase = createClient()
     const identity_doc = formatIdentityDoc(form.identity_prefix, form.identity_number)
 
+    const insertData = {
+      identity_doc,
+      full_name: form.full_name,
+      birth_date: form.birth_date,
+      phone: form.phone,
+      email: form.email,
+      state_id: form.state_id,
+      municipality_id: form.municipality_id,
+      parish_id: form.parish_id,
+      commune_id: form.commune_id,
+      address: form.address,
+      notifications_email: form.notifications_email,
+    }
+    
+    console.log('Inserting data:', insertData)
+    console.log('State IDs - state:', form.state_id, 'muni:', form.municipality_id, 'parish:', form.parish_id, 'commune:', form.commune_id)
+
     const { data, error } = await supabase
       .from('people')
-      .insert({
-        identity_doc,
-        full_name: form.full_name,
-        birth_date: form.birth_date,
-        phone: form.phone,
-        email: form.email,
-        state_id: form.state_id,
-        municipality_id: form.municipality_id,
-        parish_id: form.parish_id,
-        commune_id: form.commune_id,
-        address: form.address,
-        notifications_email: form.notifications_email,
-      })
+      .insert(insertData)
       .select()
       .single()
 
     if (error) {
+      console.error('Registration error:', error)
+      
       if (error.code === '23505') {
         if (error.message.includes('identity_doc')) {
           setErrors({ identity_number: 'Esta cédula ya está registrada' })
@@ -213,7 +220,15 @@ export default function RegisterPage() {
         } else if (error.message.includes('email')) {
           setErrors({ email: 'Este email ya está registrado' })
           setTouched(prev => ({ ...prev, email: true }))
+        } else {
+          alert('Este registro ya existe en el sistema')
         }
+      } else if (error.code === '23503') {
+        alert('Error: Datos de ubicación inválidos. Por favor selecciona nuevamente tu ubicación.')
+      } else if (error.code === '22P02') {
+        alert('Error: Formato de datos inválido. Verifica todos los campos.')
+      } else {
+        alert(`Error al registrar: ${error.message}`)
       }
       setLoading(false)
       return
