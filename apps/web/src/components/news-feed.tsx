@@ -159,13 +159,20 @@ function NewsCard({ news }: { news: News }) {
 
   const safeCurrentImage = Math.min(currentImage, Math.max(0, images.length - 1))
   const currentImageUrl = images[safeCurrentImage]?.url
+  const sanitizedUrl = sanitizeImageUrl(currentImageUrl)
 
   useEffect(() => {
     if (images.length <= 1) return
+    let mounted = true
     const interval = setInterval(() => {
-      setCurrentImage((p) => (p < images.length - 1 ? p + 1 : 0))
+      if (mounted) {
+        setCurrentImage((p) => (p < images.length - 1 ? p + 1 : 0))
+      }
     }, 4000)
-    return () => clearInterval(interval)
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
   }, [images.length])
 
   const prevImage = useCallback((e: React.MouseEvent) => {
