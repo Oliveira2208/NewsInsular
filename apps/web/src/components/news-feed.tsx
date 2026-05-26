@@ -183,7 +183,7 @@ function NewsCard({ news }: { news: News }) {
     <Link href={`/news/${news.id}`}>
       <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
         <div className="relative aspect-video bg-gray-100 flex-shrink-0">
-          {images.length > 0 ? (
+          {images.length > 0 && sanitizeImageUrl(images[currentImage].url) !== '/placeholder.svg' ? (
             <>
               <Image
                 src={sanitizeImageUrl(images[currentImage].url)}

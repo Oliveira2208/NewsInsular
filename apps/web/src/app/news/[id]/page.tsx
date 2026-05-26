@@ -4,12 +4,19 @@ import { formatDate } from '@/lib/utils'
 import Image from 'next/image'
 import { ChevronLeft, Share2 } from 'lucide-react'
 import Link from 'next/link'
+import ShareButton from './share-button'
 
 export const dynamic = 'force-dynamic'
 
-function sanitizeContent(content: string): string {
+function sanitizeUrl(url: string | undefined | null): string {
+  if (!url) return '/placeholder.svg'
+  if (url.startsWith('blob:')) return '/placeholder.svg'
+  return url
+}
+
+function sanitizeContent(content: string | undefined | null): string {
   if (!content) return ''
-  return content.replace(/blob:[^"'\s]+/g, '/placeholder-image.png')
+  return content.replace(/blob:[^"'\s]+/g, '/placeholder.svg')
 }
 
 export default async function NewsDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -24,9 +31,12 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
     .is('deleted_at', null)
     .single()
 
+  if (!news) return notFound()
+
   const sortedImages = news?.images?.sort((a: { position: number }, b: { position: number }) => a.position - b.position) ?? []
   const newsCategories = news?.categories?.map((nc: { categories: { name: string } }) => nc.categories) ?? []
   const sanitizedContent = sanitizeContent(news?.content ?? '')
+  const coverImageUrl = sanitizeUrl(sortedImages[0]?.url)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -36,9 +46,7 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
             <ChevronLeft className="w-5 h-5" />
             <span className="text-sm font-medium">Volver</span>
           </Link>
-          <button className="p-2 text-gray-500 hover:text-primary">
-            <Share2 className="w-5 h-5" />
-          </button>
+          <ShareButton title={news.title} summary={news.summary ?? ''} />
         </div>
       </header>
 
@@ -53,14 +61,24 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
         <article className="bg-white rounded-2xl shadow-sm overflow-hidden">
           {sortedImages.length > 0 && (
             <div className="relative aspect-[16/9] md:aspect-[21/9] bg-gray-100">
-              <Image
-                src={sortedImages[0].url}
-                alt={news.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, 896px"
-              />
+              {coverImageUrl === '/placeholder.svg' ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-200 text-gray-400">
+                  <svg className="w-16 h-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <path d="M21 15l-5-5L5 21" />
+                  </svg>
+                </div>
+              ) : (
+                <Image
+                  src={coverImageUrl}
+                  alt={news.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, 896px"
+                />
+              )}
             </div>
           )}
 
@@ -89,31 +107,14 @@ export default async function NewsDetail({ params }: { params: Promise<{ id: str
             <div className="prose prose-gray max-w-none">
               <div 
                 className="news-content text-gray-700 leading-relaxed md:text-lg"
-                dangerouslySetInnerHTML={{ __html: news.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizedContent }}
               />
             </div>
 
             <div className="mt-8 pt-6 border-t border-gray-100">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-500">NewsInsular</span>
-                <button 
-                  onClick={() => {
-                    if (navigator.share) {
-                      navigator.share({
-                        title: news.title,
-                        text: news.summary || news.title,
-                        url: window.location.href,
-                      })
-                    } else {
-                      navigator.clipboard.writeText(window.location.href)
-                      alert('Enlace copiado al portapapeles')
-                    }
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors"
-                >
-                  <Share2 className="w-4 h-4" />
-                  Compartir
-                </button>
+                <ShareButton title={news.title} summary={news.summary ?? ''} />
               </div>
             </div>
           </div>
