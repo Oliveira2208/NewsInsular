@@ -160,15 +160,29 @@ function NewsCard({ news }: { news: News }) {
   const safeCurrentImage = Math.min(currentImage, Math.max(0, images.length - 1))
   const currentImageUrl = images[safeCurrentImage]?.url
 
-  const prevImage = useCallback(() => {
+  useEffect(() => {
+    if (images.length <= 1) return
+    const interval = setInterval(() => {
+      setCurrentImage((p) => (p < images.length - 1 ? p + 1 : 0))
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [images.length])
+
+  const prevImage = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     setCurrentImage((p) => (p > 0 ? p - 1 : images.length - 1))
   }, [images.length])
 
-  const nextImage = useCallback(() => {
+  const nextImage = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     setCurrentImage((p) => (p < images.length - 1 ? p + 1 : 0))
   }, [images.length])
 
-  const goToImage = useCallback((i: number) => {
+  const goToImage = useCallback((e: React.MouseEvent, i: number) => {
+    e.preventDefault()
+    e.stopPropagation()
     setCurrentImage(Math.min(i, Math.max(0, images.length - 1)))
   }, [images.length])
 
@@ -186,11 +200,11 @@ function NewsCard({ news }: { news: News }) {
   const showReadMore = news.summary && news.summary.length > 150
 
   return (
-    <Link href={`/news/${news.id}`}>
-      <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
-        <div className="relative aspect-video bg-gray-100 flex-shrink-0">
-          {images.length > 0 && sanitizeImageUrl(currentImageUrl) !== '/placeholder.svg' ? (
-            <>
+    <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+      <div className="relative aspect-video bg-gray-100 flex-shrink-0">
+        {images.length > 0 && sanitizeImageUrl(currentImageUrl) !== '/placeholder.svg' ? (
+          <>
+            <Link href={`/news/${news.id}`} className="block w-full h-full">
               <Image
                 src={sanitizeImageUrl(currentImageUrl)}
                 alt={news.title}
@@ -198,82 +212,80 @@ function NewsCard({ news }: { news: News }) {
                 className="object-cover"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
-              {images.length > 1 && (
-                <>
-                  <button
-                    onClick={prevImage}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 p-1 bg-black/50 rounded-full text-white"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={nextImage}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 bg-black/50 rounded-full text-white"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                    {images.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => goToImage(i)}
-                        className={`w-2 h-2 rounded-full ${
-                          i === safeCurrentImage ? 'bg-white' : 'bg-white/50'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          ) : (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              Sin imagen
-            </div>
-          )}
-        </div>
+            </Link>
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={prevImage}
+                  className="absolute left-1 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 rounded-full text-white hover:bg-black/70 z-10"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={nextImage}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-black/50 rounded-full text-white hover:bg-black/70 z-10"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-2 p-2 z-10">
+                  {images.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={(e) => goToImage(e, i)}
+                      className={`w-3 h-3 rounded-full transition-colors ${
+                        i === safeCurrentImage ? 'bg-white' : 'bg-white/50 hover:bg-white/75'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          <Link href={`/news/${news.id}`} className="flex items-center justify-center h-full text-gray-400">
+            Sin imagen
+          </Link>
+        )}
+      </div>
 
-        <div className="p-4 flex flex-col flex-grow">
-          {news.categories && news.categories.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-2">
-              {news.categories.map((cat, idx) => {
-                const catName = cat.categories?.name
-                return catName ? (
-                  <span key={idx} className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
-                    {catName}
-                  </span>
-                ) : null
-              })}
-            </div>
-          )}
-          <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-            {news.title}
-          </h2>
-          {news.summary && (
-            <p className="text-sm text-gray-600 mb-3 flex-grow">
-              {showReadMore ? (
-                <>
-                  {news.summary.slice(0, 150)}...
-                  <span className="text-primary font-medium ml-1">Leer más</span>
-                </>
-              ) : (
-                news.summary
-              )}
-            </p>
-          )}
-          <div className="flex items-center justify-between mt-auto pt-3 border-t">
-            <span className="text-xs text-gray-500">
-              {formatDate(news.created_at)}
-            </span>
-            <button
-              onClick={handleShare}
-              className="p-2 text-gray-500 hover:text-primary"
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
-          </div>
+      <Link href={`/news/${news.id}`} className="p-4 flex flex-col flex-grow">
+        <div className="flex flex-wrap gap-1 mb-2">
+          {news.categories && news.categories.length > 0 && news.categories.map((cat, idx) => {
+            const catName = cat.categories?.name
+            return catName ? (
+              <span key={idx} className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded">
+                {catName}
+              </span>
+            ) : null
+          })}
         </div>
-      </article>
-    </Link>
+        <h2 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+          {news.title}
+        </h2>
+        {news.summary && (
+          <p className="text-sm text-gray-600 mb-3 flex-grow">
+            {showReadMore ? (
+              <>
+                {news.summary.slice(0, 150)}...
+                <span className="text-primary font-medium ml-1">Leer más</span>
+              </>
+            ) : (
+              news.summary
+            )}
+          </p>
+        )}
+        <div className="flex items-center justify-between mt-auto pt-3 border-t">
+          <span className="text-xs text-gray-500">
+            {formatDate(news.created_at)}
+          </span>
+          <button
+            onClick={handleShare}
+            className="p-2 text-gray-500 hover:text-primary"
+          >
+            <Share2 className="w-4 h-4" />
+          </button>
+        </div>
+      </Link>
+    </article>
   )
 }
