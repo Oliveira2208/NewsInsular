@@ -10,7 +10,10 @@ export const dynamic = 'force-dynamic'
 
 function sanitizeUrl(url: string | undefined | null): string {
   if (!url) return '/placeholder.svg'
+  if (typeof url !== 'string') return '/placeholder.svg'
   if (url.startsWith('blob:')) return '/placeholder.svg'
+  if (url.startsWith('data:')) return '/placeholder.svg'
+  if (!url.startsWith('http') && !url.startsWith('/')) return '/placeholder.svg'
   return url
 }
 
