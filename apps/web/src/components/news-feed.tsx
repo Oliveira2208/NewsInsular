@@ -157,6 +157,9 @@ function NewsCard({ news }: { news: News }) {
   const images = news.images?.sort((a, b) => a.position - b.position) ?? []
   const [currentImage, setCurrentImage] = useState(0)
 
+  const safeCurrentImage = Math.min(currentImage, Math.max(0, images.length - 1))
+  const currentImageUrl = images[safeCurrentImage]?.url
+
   const prevImage = useCallback(() => {
     setCurrentImage((p) => (p > 0 ? p - 1 : images.length - 1))
   }, [images.length])
@@ -166,8 +169,8 @@ function NewsCard({ news }: { news: News }) {
   }, [images.length])
 
   const goToImage = useCallback((i: number) => {
-    setCurrentImage(i)
-  }, [])
+    setCurrentImage(Math.min(i, Math.max(0, images.length - 1)))
+  }, [images.length])
 
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -186,10 +189,10 @@ function NewsCard({ news }: { news: News }) {
     <Link href={`/news/${news.id}`}>
       <article className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
         <div className="relative aspect-video bg-gray-100 flex-shrink-0">
-          {images.length > 0 && sanitizeImageUrl(images[currentImage].url) !== '/placeholder.svg' ? (
+          {images.length > 0 && sanitizeImageUrl(currentImageUrl) !== '/placeholder.svg' ? (
             <>
               <Image
-                src={sanitizeImageUrl(images[currentImage].url)}
+                src={sanitizeImageUrl(currentImageUrl)}
                 alt={news.title}
                 fill
                 className="object-cover"
@@ -215,7 +218,7 @@ function NewsCard({ news }: { news: News }) {
                         key={i}
                         onClick={() => goToImage(i)}
                         className={`w-2 h-2 rounded-full ${
-                          i === currentImage ? 'bg-white' : 'bg-white/50'
+                          i === safeCurrentImage ? 'bg-white' : 'bg-white/50'
                         }`}
                       />
                     ))}
