@@ -1,5 +1,5 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { authServer } from '@/lib/auth/server'
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
@@ -10,33 +10,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request: { headers: request.headers } })
   }
 
-  let response = NextResponse.next({ request: { headers: request.headers } })
+  const sessionToken = request.cookies.get('better-auth.session_token')?.value
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            request.cookies.set(name, value)
-            response.cookies.set(name, value, options)
-          })
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
+  if (!sessionToken) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
-  return response
+  const { valid } = await authServer.validateSessionToken(sessionToken)
+
+  if (!valid) {
+    return NextResponse.redirect(new URL('/admin/login', request.url))
+  }
+
+  return NextResponse.next({ request: { headers: request.headers } })
 }
 
 export const config = {

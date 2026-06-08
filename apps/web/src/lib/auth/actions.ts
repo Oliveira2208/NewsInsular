@@ -1,10 +1,9 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
+import { authClient } from '@/lib/auth/client'
 import { redirect } from 'next/navigation'
 
 export async function signOut() {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
+  await authClient.signOut()
   redirect('/admin/login')
 }
