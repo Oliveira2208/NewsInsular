@@ -14,8 +14,10 @@ CREATE INDEX IF NOT EXISTS idx_news_templates_categories_category ON news_templa
 
 ALTER TABLE news_templates_categories ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "news_templates_categories_public_read" ON news_templates_categories;
+DROP POLICY IF EXISTS "news_templates_categories_admin_write" ON news_templates_categories;
 CREATE POLICY "news_templates_categories_public_read" ON news_templates_categories FOR SELECT USING (true);
-CREATE POLICY "news_templates_categories_admin_write" ON news_templates_categories FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "news_templates_admin_write" ON news_templates_categories FOR ALL USING (auth.role() = 'authenticated');
 
 -- Remove old default_category_id column if exists
 ALTER TABLE news_templates DROP COLUMN IF EXISTS default_category_id;

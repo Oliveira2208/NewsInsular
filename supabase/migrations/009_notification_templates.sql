@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS notification_templates (
 
 ALTER TABLE notification_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "notification_templates_public_read" ON notification_templates;
+DROP POLICY IF EXISTS "notification_templates_admin_write" ON notification_templates;
 CREATE POLICY "notification_templates_public_read" ON notification_templates FOR SELECT USING (true);
 CREATE POLICY "notification_templates_admin_write" ON notification_templates FOR ALL USING (auth.role() = 'authenticated');
 

@@ -14,6 +14,8 @@ CREATE INDEX IF NOT EXISTS idx_news_categories_category ON news_categories(categ
 
 ALTER TABLE news_categories ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "news_categories_public_read" ON news_categories;
+DROP POLICY IF EXISTS "news_categories_admin_write" ON news_categories;
 CREATE POLICY "news_categories_public_read" ON news_categories FOR SELECT USING (true);
 CREATE POLICY "news_categories_admin_write" ON news_categories FOR ALL USING (auth.role() = 'authenticated');
 

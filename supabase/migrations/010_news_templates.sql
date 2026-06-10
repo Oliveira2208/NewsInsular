@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS news_templates (
 
 ALTER TABLE news_templates ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "news_templates_public_read" ON news_templates;
+DROP POLICY IF EXISTS "news_templates_admin_write" ON news_templates;
 CREATE POLICY "news_templates_public_read" ON news_templates FOR SELECT USING (true);
 CREATE POLICY "news_templates_admin_write" ON news_templates FOR ALL USING (auth.role() = 'authenticated');
 
