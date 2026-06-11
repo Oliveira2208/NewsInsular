@@ -157,19 +157,20 @@ export function MultiStepRegisterForm() {
     }
 
     if (data) {
-      try {
-        await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-welcome-email`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: form.email,
-            fullName: `${form.first_name} ${form.last_name}`,
-            unsubscribe_token: data.unsubscribe_token,
-          }),
-        })
-      } catch (err) {
-        console.error('Welcome email error:', err)
-      }
+      // TODO: Reactivar envío de emails cuando se configure RESEND_API_KEY
+      // try {
+      //   await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/send-welcome-email`, {
+      //     method: 'POST',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     body: JSON.stringify({
+      //       email: form.email,
+      //       fullName: `${form.first_name} ${form.last_name}`,
+      //       unsubscribe_token: data.unsubscribe_token,
+      //     }),
+      //   })
+      // } catch (err) {
+      //   console.error('Welcome email error:', err)
+      // }
 
       if ('Notification' in window && Notification.permission === 'granted') {
         try {
