@@ -29,13 +29,13 @@ export function Navbar() {
               </Link>
               <Link
                 href="/register"
-                className="relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-primary to-green-600 text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none"
+                className="relative flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-green-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none"
               >
                 <UserPlus className="w-4 h-4" />
                 Registrarse
                 <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-lime-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-lime-500"></span>
                 </span>
               </Link>
               <NotificationsDropdown />
@@ -87,13 +87,13 @@ export function Navbar() {
         </div>
       </nav>
 
-      <div className="md:hidden bg-gradient-to-r from-primary to-green-600 text-white">
+      <div className="md:hidden bg-gradient-to-r from-emerald-500 to-green-700 text-white">
         <Link
           href="/register"
-          className="flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold hover:from-green-600 hover:to-primary transition-all"
+          className="flex items-center justify-center gap-2 py-3 px-4 text-sm font-semibold hover:from-green-700 hover:to-emerald-500 transition-all"
         >
           <UserPlus className="w-4 h-4 animate-bounce" />
-          <span>¡Regístrate y recibe noticias personalizadas!</span>
+          <span>¡Únete a nuestra red ecoamigable!</span>
           <span className="ml-2 text-lg">→</span>
         </Link>
       </div>
