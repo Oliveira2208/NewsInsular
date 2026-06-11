@@ -5,10 +5,10 @@
 ```
 NewsInsular/
 ├── apps/
-│   ├── web/          # Next.js 14 (App Router), Tailwind CSS
+│   ├── web/          # Next.js 16 (App Router), Tailwind CSS
 │   └── mobile/       # Expo (expo-router), NativeWind
 ├── supabase/
-│   ├── migrations/   # SQL migrations (001_initial_schema.sql → 013_fix_people_table.sql)
+│   ├── migrations/   # SQL migrations (001_initial_schema.sql → 016_fix_news_author_fk.sql)
 │   └── functions/    # Edge Functions (send-welcome-email, notify-new-news, etc.)
 ├── package.json      # Root (pnpm, but NOT a workspace - uses `cd` scripts)
 ```
@@ -47,9 +47,9 @@ expo run:ios          # Run on iOS
 
 - **better-auth** for authentication (sign in/out, session management)
 - **Supabase** for database operations only (NOT for auth)
-- Auth client: `lib/auth/client.ts` (use `authClient` for sign-in, sign-out)
-- Auth server: `lib/auth/server.ts` (use `authServer` for server-side validation)
-- Admin routes protected by `middleware.ts` using `validateSessionToken`
+- Auth client: `lib/auth/client.ts` (use `authClient` for sign-in, sign-out, client session)
+- Auth server: `lib/auth/server.ts` (use `getSession()` for server-side validation)
+- Admin routes protected by `proxy.ts` using `getSessionCookie` from `better-auth/cookies`
 
 ## Installed Libraries
 
@@ -101,4 +101,4 @@ Build artifacts are gitignored (`android/`, `ios/`, `build/`, `.eas/`).
 
 - File uploads go to Supabase Storage bucket `news-images` (public read, authenticated write)
 - Admin pages use Supabase client (`lib/supabase/server.ts`) for database queries
-- Admin routes protected by `apps/web/src/middleware.ts` using better-auth session validation
+- Admin routes protected by `apps/web/src/proxy.ts` using better-auth session validation

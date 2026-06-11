@@ -277,7 +277,7 @@ export function MultiStepRegisterForm() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
                     <input
                       type="text"
                       value={form.first_name}

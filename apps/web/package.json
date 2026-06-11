@@ -34,6 +34,7 @@
     "@uiw/react-md-editor": "^4.1.1",
     "autoprefixer": "^10.0.0",
     "better-auth": "^1.6.16",
+    "pg": "^8.21.0",
     "chart.js": "^4.5.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",

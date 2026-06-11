@@ -1,64 +1,46 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { createBrowserClient } from '@supabase/ssr'
-import { User } from '@supabase/supabase-js'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { authClient } from './client'
+
+interface AuthUser {
+  id: string
+  email: string
+  name: string
+}
 
 interface AuthContextType {
-  user: User | null
+  user: AuthUser | null
   loading: boolean
-  signOut: () => Promise<void>
+  refresh: () => void
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  signOut: async () => {},
+  refresh: () => {},
 })
 
-export function useAuth() {
-  return useContext(AuthContext)
-}
-
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
-  const router = useRouter()
 
-  useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-
-    const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
-      setLoading(false)
-    }
-
-    getSession()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const signOut = async () => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    await supabase.auth.signOut()
-    router.push('/admin/login')
+  const fetchSession = async () => {
+    setLoading(true)
+    const { data } = await authClient.getSession()
+    setUser(data?.user ?? null)
+    setLoading(false)
   }
 
+  useEffect(() => {
+    fetchSession()
+  }, [])
+
   return (
-    <AuthContext.Provider value={{ user, loading, signOut }}>
+    <AuthContext.Provider value={{ user, loading, refresh: fetchSession }}>
       {children}
     </AuthContext.Provider>
   )
 }
+
+export const useAuth = () => useContext(AuthContext)

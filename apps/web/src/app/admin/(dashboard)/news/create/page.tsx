@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense, DragEvent, ChangeEvent } fr
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
+import { authClient } from '@/lib/auth/client'
 import type { Category } from '@/lib/types'
 import MarkdownEditor from '@/components/markdown-editor'
 import { Eye, X, Upload, Image as ImageIcon } from 'lucide-react'
@@ -179,7 +180,8 @@ function CreateNewsContent() {
     setLoading(true)
 
     const supabase = createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: session } = await authClient.getSession()
+    const user = session?.user
 
     let scheduledFor: string | null = null
     let published = false
