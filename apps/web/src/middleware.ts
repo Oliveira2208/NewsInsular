@@ -1,3 +1,4 @@
+import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
@@ -9,9 +10,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next({ request: { headers: request.headers } })
   }
 
-  const sessionToken = request.cookies.get('better-auth.session_token')?.value
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll() {},
+      },
+    }
+  )
 
-  if (!sessionToken) {
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
