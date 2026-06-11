@@ -6,11 +6,6 @@ const nextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
-  experimental: {
-    turbo: {
-      resolveAlias: {},
-    },
-  },
 }
 
 export default nextConfig
