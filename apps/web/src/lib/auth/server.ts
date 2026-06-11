@@ -1,4 +1,4 @@
-import { createAuthClient } from 'better-auth/server'
+import { createAuthClient } from 'better-auth/next-js'
 import { cookies } from 'next/headers'
 
 export const authServer = createAuthClient({
