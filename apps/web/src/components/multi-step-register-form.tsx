@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -100,16 +100,44 @@ export function MultiStepRegisterForm() {
   const filteredParishes = form.municipality_id ? locations.parishes.filter(p => p.municipality_id === form.municipality_id) : []
   const filteredCommunes = form.municipality_id ? locations.communes.filter(c => c.municipality_id === form.municipality_id) : []
 
+  useEffect(() => {
+    const supabase = createClient()
+    const fetchLocations = async () => {
+      const [statesRes, municipalitiesRes, parishesRes, communesRes] = await Promise.all([
+        supabase.from('states').select('id, name').order('name'),
+        supabase.from('municipalities').select('id, name, state_id').order('name'),
+        supabase.from('parishes').select('id, name, municipality_id').order('name'),
+        supabase.from('communes').select('id, name, municipality_id').order('name'),
+      ])
+      setLocations({
+        states: statesRes.data ?? [],
+        municipalities: municipalitiesRes.data ?? [],
+        parishes: parishesRes.data ?? [],
+        communes: communesRes.data ?? [],
+      })
+    }
+    fetchLocations()
+  }, [])
+
+  const handleStateChange = (stateId: number) => {
+    setForm(prev => ({ ...prev, state_id: stateId, municipality_id: 0, parish_id: 0, commune_id: 0 }))
+  }
+
+  const handleMunicipalityChange = (munId: number) => {
+    const mun = locations.municipalities.find(m => m.id === munId)
+    setForm(prev => ({ ...prev, municipality_id: munId, city: mun?.name ?? '', parish_id: 0, commune_id: 0 }))
+  }
+
   const canProceed = () => {
     switch (step) {
       case 1:
-        return form.first_name && form.last_name && form.email && form.city && form.profession
+        return form.first_name && form.last_name && form.email && form.state_id && form.municipality_id && form.address
       case 2:
         return form.interests.length > 0
       case 3:
         return form.participation_type
       case 4:
-        return form.state_id && form.municipality_id && form.address
+        return true
       default:
         return true
     }
@@ -292,27 +320,74 @@ export function MultiStepRegisterForm() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ciudad *</label>
-                    <input
-                      type="text"
-                      value={form.city}
-                      onChange={(e) => updateForm('city', e.target.value)}
-                      className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Caracas"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">País *</label>
-                    <input
-                      type="text"
-                      value={form.country}
-                      onChange={(e) => updateForm('country', e.target.value)}
-                      className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
-                      placeholder="Venezuela"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Estado *</label>
+                  <select
+                    value={form.state_id}
+                    onChange={(e) => handleStateChange(Number(e.target.value))}
+                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+                  >
+                    <option value={0}>Selecciona un estado</option>
+                    {locations.states.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Municipio *</label>
+                  <select
+                    value={form.municipality_id}
+                    onChange={(e) => handleMunicipalityChange(Number(e.target.value))}
+                    disabled={!form.state_id}
+                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value={0}>Selecciona un municipio</option>
+                    {filteredMunicipalities.map(m => (
+                      <option key={m.id} value={m.id}>{m.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Parroquia</label>
+                  <select
+                    value={form.parish_id}
+                    onChange={(e) => updateForm('parish_id', Number(e.target.value))}
+                    disabled={!form.municipality_id}
+                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value={0}>Selecciona una parroquia</option>
+                    {filteredParishes.map(p => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Comuna</label>
+                  <select
+                    value={form.commune_id}
+                    onChange={(e) => updateForm('commune_id', Number(e.target.value))}
+                    disabled={!form.municipality_id}
+                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value={0}>Selecciona una comuna</option>
+                    {filteredCommunes.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Dirección exacta *</label>
+                  <input
+                    type="text"
+                    value={form.address}
+                    onChange={(e) => updateForm('address', e.target.value)}
+                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
+                    placeholder="Calle, casa, edificio, sector..."
+                  />
                 </div>
 
                 <div>
