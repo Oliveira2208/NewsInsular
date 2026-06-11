@@ -42,24 +42,18 @@ export function FirstVisitPopup() {
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">¡Bienvenido a NewsInsular!</h2>
-          <p className="text-gray-600">
-            Regístrate gratis para recibir noticias personalizadas, exportar a Excel y PDF, y más.
-          </p>
         </div>
 
         <Link
           href="/register"
           onClick={handleClose}
-          className="inline-block w-full py-3 px-6 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors"
+          className="inline-block w-full py-3 px-6 bg-gradient-to-r from-emerald-500 to-green-700 text-white font-semibold rounded-xl hover:from-green-700 hover:to-emerald-500 transition-all shadow-lg"
         >
           Registrarse ahora
         </Link>
 
-        <p className="mt-4 text-sm text-gray-500">
-          ¿Ya tienes cuenta?{' '}
-          <Link href="/login" className="text-primary hover:underline" onClick={handleClose}>
-            Inicia sesión
-          </Link>
+        <p className="mt-4 text-xs text-gray-400">
+          Solo los administradores pueden iniciar sesión
         </p>
       </div>
     </div>
