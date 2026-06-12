@@ -12,7 +12,6 @@ interface AuthContextType {
   personId: string | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (name: string, email: string, password: string) => Promise<void>
   signOut: () => Promise<void>
   refresh: () => Promise<void>
 }
@@ -22,7 +21,6 @@ const AuthContext = createContext<AuthContextType>({
   personId: null,
   loading: true,
   signIn: async () => {},
-  signUp: async () => {},
   signOut: async () => {},
   refresh: async () => {},
 })
@@ -52,11 +50,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await fetchSession()
   }, [fetchSession])
 
-  const signUp = useCallback(async (name: string, email: string, password: string) => {
-    await authClient.signUp(name, email, password)
-    await fetchSession()
-  }, [fetchSession])
-
   const signOut = useCallback(async () => {
     await authClient.signOut()
     setUser(null)
@@ -64,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, personId, loading, signIn, signUp, signOut, refresh: fetchSession }}>
+    <AuthContext.Provider value={{ user, personId, loading, signIn, signOut, refresh: fetchSession }}>
       {children}
     </AuthContext.Provider>
   )
