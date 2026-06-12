@@ -1,6 +1,7 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { authClient } from './client'
 
 interface AuthUser {
@@ -12,18 +13,21 @@ interface AuthUser {
 interface AuthContextType {
   user: AuthUser | null
   loading: boolean
+  signOut: () => Promise<void>
   refresh: () => void
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  signOut: async () => {},
   refresh: () => {},
 })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   const fetchSession = async () => {
     setLoading(true)
@@ -32,12 +36,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }
 
+  const signOut = useCallback(async () => {
+    await authClient.signOut()
+    setUser(null)
+    router.push('/admin/login')
+  }, [router])
+
   useEffect(() => {
     fetchSession()
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, refresh: fetchSession }}>
+    <AuthContext.Provider value={{ user, loading, signOut, refresh: fetchSession }}>
       {children}
     </AuthContext.Provider>
   )
