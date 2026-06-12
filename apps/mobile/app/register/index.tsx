@@ -9,21 +9,22 @@ export default function RegisterScreen() {
   const supabase = useSupabase()
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     identity_prefix: 'V',
     identity_number: '',
     birth_date: '',
     phone: '',
     email: '',
-    state: '',
-    municipality: '',
-    parish: '',
-    commune: '',
+    state_id: '',
+    municipality_id: '',
+    parish_id: '',
+    commune_id: '',
     address: '',
   })
 
   const handleSubmit = async () => {
-    if (!form.full_name || !form.identity_number || !form.birth_date || !form.phone || !form.email) {
+    if (!form.first_name || !form.last_name || !form.identity_number || !form.birth_date || !form.phone || !form.email) {
       Alert.alert('Error', 'Todos los campos son requeridos')
       return
     }
@@ -32,15 +33,12 @@ export default function RegisterScreen() {
     setLoading(true)
 
     const { error } = await supabase.from('people').insert({
-      full_name: form.full_name,
+      first_name: form.first_name,
+      last_name: form.last_name,
       identity_doc,
       birth_date: form.birth_date,
       phone: form.phone,
       email: form.email,
-      state: form.state,
-      municipality: form.municipality,
-      parish: form.parish,
-      commune: form.commune,
       address: form.address,
     })
 
@@ -65,12 +63,22 @@ export default function RegisterScreen() {
 
       <View className="space-y-4">
         <View className="bg-white rounded-xl p-4">
-          <Text className="text-sm font-medium text-gray-700 mb-1">Nombre y apellidos</Text>
+          <Text className="text-sm font-medium text-gray-700 mb-1">Nombres</Text>
           <TextInput
-            value={form.full_name}
-            onChangeText={(v) => updateField('full_name', v)}
+            value={form.first_name}
+            onChangeText={(v) => updateField('first_name', v)}
             className="w-full border rounded-lg px-4 py-2"
-            placeholder="María García"
+            placeholder="María"
+          />
+        </View>
+
+        <View className="bg-white rounded-xl p-4">
+          <Text className="text-sm font-medium text-gray-700 mb-1">Apellidos</Text>
+          <TextInput
+            value={form.last_name}
+            onChangeText={(v) => updateField('last_name', v)}
+            className="w-full border rounded-lg px-4 py-2"
+            placeholder="García"
           />
         </View>
 
@@ -135,8 +143,8 @@ export default function RegisterScreen() {
             {VENEZUELA_STATES.map((s) => (
               <TouchableOpacity
                 key={s}
-                onPress={() => updateField('state', s)}
-                className={`px-4 py-2 ${form.state === s ? 'bg-blue-50' : ''}`}
+                onPress={() => updateField('state_id', s)}
+                className={`px-4 py-2 ${form.state_id === s ? 'bg-blue-50' : ''}`}
               >
                 <Text>{s}</Text>
               </TouchableOpacity>
@@ -147,8 +155,8 @@ export default function RegisterScreen() {
         <View className="bg-white rounded-xl p-4">
           <Text className="text-sm font-medium text-gray-700 mb-1">Municipio</Text>
           <TextInput
-            value={form.municipality}
-            onChangeText={(v) => updateField('municipality', v)}
+            value={form.municipality_id}
+            onChangeText={(v) => updateField('municipality_id', v)}
             className="w-full border rounded-lg px-4 py-2"
           />
         </View>
@@ -156,8 +164,8 @@ export default function RegisterScreen() {
         <View className="bg-white rounded-xl p-4">
           <Text className="text-sm font-medium text-gray-700 mb-1">Parroquia</Text>
           <TextInput
-            value={form.parish}
-            onChangeText={(v) => updateField('parish', v)}
+            value={form.parish_id}
+            onChangeText={(v) => updateField('parish_id', v)}
             className="w-full border rounded-lg px-4 py-2"
           />
         </View>
@@ -165,8 +173,8 @@ export default function RegisterScreen() {
         <View className="bg-white rounded-xl p-4">
           <Text className="text-sm font-medium text-gray-700 mb-1">Comuna</Text>
           <TextInput
-            value={form.commune}
-            onChangeText={(v) => updateField('commune', v)}
+            value={form.commune_id}
+            onChangeText={(v) => updateField('commune_id', v)}
             className="w-full border rounded-lg px-4 py-2"
           />
         </View>
