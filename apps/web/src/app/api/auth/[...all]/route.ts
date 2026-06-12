@@ -1,18 +1,21 @@
 import { auth } from '@/lib/auth/auth'
 import { toNextJsHandler } from 'better-auth/next-js'
 
-const ALLOWED_ORIGINS = [
-  'http://localhost:3000',
-  'http://localhost:8081',
-  'exp://',
-  process.env.NEXT_PUBLIC_APP_URL || 'https://newsinsular.vercel.app',
-  ...(process.env.CORS_ORIGINS?.split(',') || []),
-].filter(Boolean) as string[]
-
 function getOrigin(request: Request): string | null {
   const origin = request.headers.get('origin')
   if (!origin) return null
-  if (ALLOWED_ORIGINS.some((a) => origin.startsWith(a))) return origin
+
+  const allowed = [
+    'http://localhost:3000',
+    'http://localhost:8081',
+    'exp://',
+    process.env.NEXT_PUBLIC_APP_URL || 'https://news-insular.vercel.app',
+    ...(process.env.CORS_ORIGINS?.split(',') || []),
+  ].filter(Boolean) as string[]
+
+  if (allowed.some((a) => origin.startsWith(a))) return origin
+  if (origin.endsWith('.vercel.app')) return origin
+
   return null
 }
 
