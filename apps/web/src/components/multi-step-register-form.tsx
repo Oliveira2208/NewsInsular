@@ -131,7 +131,7 @@ export function MultiStepRegisterForm() {
   const canProceed = () => {
     switch (step) {
       case 1:
-        return form.first_name && form.last_name && form.email && form.state_id && form.municipality_id && form.address
+        return form.first_name && form.last_name && form.email && form.identity_number && form.birth_date && form.phone && form.state_id && form.municipality_id && form.address
       case 2:
         return form.interests.length > 0
       case 3:
@@ -310,7 +310,40 @@ export function MultiStepRegisterForm() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp / Teléfono (opcional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Cédula de identidad *</label>
+                  <div className="flex gap-2">
+                    <select
+                      value={form.identity_prefix}
+                      onChange={(e) => updateForm('identity_prefix', e.target.value)}
+                      className="w-24 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-white"
+                    >
+                      <option value="V">V</option>
+                      <option value="E">E</option>
+                      <option value="P">P</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={form.identity_number}
+                      onChange={(e) => updateForm('identity_number', e.target.value.replace(/\D/g, ''))}
+                      className="flex-1 px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
+                      placeholder="12345678"
+                      inputMode="numeric"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de cumpleaños *</label>
+                  <input
+                    type="date"
+                    value={form.birth_date}
+                    onChange={(e) => updateForm('birth_date', e.target.value)}
+                    className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">WhatsApp / Teléfono *</label>
                   <input
                     type="tel"
                     value={form.phone}
