@@ -2,25 +2,26 @@ import { useState, useEffect, useCallback } from 'react'
 import { View, Text, FlatList, TouchableOpacity } from 'react-native'
 import { useRouter } from 'expo-router'
 import { useSupabase } from '@/providers/supabase'
+import { useAuth } from '@/providers/auth'
 import type { Notification } from '../src/types'
 
 export default function NotificationsScreen() {
   const supabase = useSupabase()
+  const { personId, loading: authLoading } = useAuth()
   const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (authLoading || !personId) return
+
     let isMounted = true
 
     async function fetchNotifications() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
       const { data } = await supabase
         .from('notifications')
         .select('*, news:news(*)')
-        .eq('person_id', user.id)
+        .eq('person_id', personId)
         .order('created_at', { ascending: false })
         .limit(50)
 
@@ -53,7 +54,7 @@ export default function NotificationsScreen() {
       isMounted = false
       supabase.removeChannel(subscription)
     }
-  }, [])
+  }, [personId, authLoading])
 
   const markAsRead = useCallback(async (id: string, newsId: string | null) => {
     await supabase.from('notifications').update({ read: true }).eq('id', id)
@@ -64,6 +65,25 @@ export default function NotificationsScreen() {
   }, [supabase, router])
 
   const unreadCount = notifications.filter((n) => !n.read).length
+
+  if (authLoading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50">
+        <Text className="text-gray-500">Cargando...</Text>
+      </View>
+    )
+  }
+
+  if (!personId) {
+    return (
+      <View className="flex-1 items-center justify-center bg-gray-50 p-8">
+        <Text className="text-xl font-bold text-gray-900 mb-2">Notificaciones</Text>
+        <Text className="text-gray-500 text-center">
+          Inicia sesión para ver tus notificaciones
+        </Text>
+      </View>
+    )
+  }
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -111,13 +131,10 @@ export default function NotificationsScreen() {
         refreshing={loading}
         onRefresh={async () => {
           setLoading(true)
-          const { data: { user } } = await supabase.auth.getUser()
-          if (!user) return
-
           const { data } = await supabase
             .from('notifications')
             .select('*, news:news(*)')
-            .eq('person_id', user.id)
+            .eq('person_id', personId)
             .order('created_at', { ascending: false })
             .limit(50)
 
